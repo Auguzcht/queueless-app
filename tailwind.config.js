@@ -35,10 +35,30 @@ module.exports = {
         'body-semi': ['Inter-SemiBold'],
       },
       borderRadius: {
-        sm: '8px',
-        md: '12px',
-        lg: '16px',
-        xl: '24px',
+        sm: '12px',
+        md: '16px',
+        lg: '20px',
+        xl: '28px',
+        full: '9999px',
+      },
+      height: {
+        'touch': '56px',
+        'touch-lg': '60px',
+      },
+      minHeight: {
+        'touch': '56px',
+        'touch-lg': '60px',
+      },
+      padding: {
+        'input': '20px',
+      },
+      fontSize: {
+        'input': ['16px', { lineHeight: '22px' }],
+        'heading-xl': ['32px', { lineHeight: '38px' }],
+      },
+      gap: {
+        'section': '32px',
+        'element': '24px',
       },
     },
   },

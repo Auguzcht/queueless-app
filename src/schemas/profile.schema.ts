@@ -21,10 +21,6 @@ export const updateProfileSchema = z.object({
     .regex(/^\+?[\d\s-()]{7,15}$/, 'Invalid phone number')
     .optional()
     .or(z.literal('')),
-  studentId: z
-    .string()
-    .optional()
-    .or(z.literal('')),
 });
 
 export const profileResponseSchema = z.object({
@@ -35,7 +31,6 @@ export const profileResponseSchema = z.object({
   phone: z.string().nullable(),
   avatar_url: z.string().nullable(),
   role: z.enum(['student', 'parent', 'staff', 'admin']),
-  student_id: z.string().nullable(),
   is_verified: z.boolean(),
   created_at: z.string(),
   updated_at: z.string(),

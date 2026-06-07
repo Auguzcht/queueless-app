@@ -5,75 +5,55 @@ import * as React from 'react';
 import { Platform, Text as RNText, type Role } from 'react-native';
 
 const textVariants = cva(
-  cn(
-    'text-foreground text-base',
-    Platform.select({
-      web: 'select-text',
-    })
-  ),
+  cn('text-foreground text-base leading-6', Platform.select({ web: 'select-text' })),
   {
     variants: {
       variant: {
         default: '',
-        h1: cn(
-          'text-center text-4xl font-extrabold tracking-tight',
-          Platform.select({ web: 'scroll-m-20 text-balance' })
-        ),
-        h2: cn(
-          'border-border border-b pb-2 text-3xl font-semibold tracking-tight',
-          Platform.select({ web: 'scroll-m-20 first:mt-0' })
-        ),
-        h3: cn('text-2xl font-semibold tracking-tight', Platform.select({ web: 'scroll-m-20' })),
-        h4: cn('text-xl font-semibold tracking-tight', Platform.select({ web: 'scroll-m-20' })),
-        p: 'mt-3 leading-7 sm:mt-6',
+        // Display / Hero — 36px, ExtraBold, tight leading, negative tracking
+        h1: cn('text-[36px] font-extrabold leading-[42px] tracking-[-1px]', Platform.select({ web: 'scroll-m-20' })),
+        // Section header — 28px, Bold
+        h2: cn('text-[28px] font-bold leading-[34px] tracking-[-0.5px]', Platform.select({ web: 'scroll-m-20' })),
+        // Card header — 22px, Bold
+        h3: cn('text-[22px] font-bold leading-[28px]', Platform.select({ web: 'scroll-m-20' })),
+        // Subheader — 18px, SemiBold
+        h4: cn('text-lg font-semibold leading-6', Platform.select({ web: 'scroll-m-20' })),
+        // Body — 16px, Regular, generous line height
+        p: 'text-base leading-6 text-muted-foreground',
+        // Large body — 18px
+        lead: 'text-lg leading-7 text-muted-foreground',
+        // Large label — 16px SemiBold
+        large: 'text-base font-semibold',
+        // Small / caption — 13px
+        small: 'text-sm leading-4 text-muted-foreground',
+        // Muted caption — 12px
+        muted: 'text-xs leading-4 text-muted-foreground',
+        // Blockquote
         blockquote: 'mt-4 border-l-2 pl-3 italic sm:mt-6 sm:pl-6',
-        code: cn(
-          'bg-muted relative rounded px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold'
-        ),
-        lead: 'text-muted-foreground text-xl',
-        large: 'text-lg font-semibold',
-        small: 'text-sm font-medium leading-none',
-        muted: 'text-muted-foreground text-sm',
+        // Code
+        code: cn('bg-muted relative rounded px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold'),
       },
     },
-    defaultVariants: {
-      variant: 'default',
-    },
+    defaultVariants: { variant: 'default' },
   }
 );
 
 type TextVariantProps = VariantProps<typeof textVariants>;
-
 type TextVariant = NonNullable<TextVariantProps['variant']>;
 
 const ROLE: Partial<Record<TextVariant, Role>> = {
-  h1: 'heading',
-  h2: 'heading',
-  h3: 'heading',
-  h4: 'heading',
+  h1: 'heading', h2: 'heading', h3: 'heading', h4: 'heading',
   blockquote: Platform.select({ web: 'blockquote' as Role }),
   code: Platform.select({ web: 'code' as Role }),
 };
 
-const ARIA_LEVEL: Partial<Record<TextVariant, string>> = {
-  h1: '1',
-  h2: '2',
-  h3: '3',
-  h4: '4',
-};
+const ARIA_LEVEL: Partial<Record<TextVariant, string>> = { h1: '1', h2: '2', h3: '3', h4: '4' };
 
 const TextClassContext = React.createContext<string | undefined>(undefined);
 
 function Text({
-  className,
-  asChild = false,
-  variant = 'default',
-  ...props
-}: React.ComponentProps<typeof RNText> &
-  React.RefAttributes<typeof RNText> &
-  TextVariantProps & {
-    asChild?: boolean;
-  }) {
+  className, asChild = false, variant = 'default', ...props
+}: React.ComponentProps<typeof RNText> & React.RefAttributes<typeof RNText> & TextVariantProps & { asChild?: boolean }) {
   const textClass = React.useContext(TextClassContext);
   const Component = asChild ? Slot : RNText;
   return (

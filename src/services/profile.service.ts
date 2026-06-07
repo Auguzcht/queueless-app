@@ -24,7 +24,6 @@ export const profileService = {
     if (parsed.middleName !== undefined) updateData.middle_name = parsed.middleName === '' ? null : parsed.middleName;
     if (parsed.lastName !== undefined) updateData.last_name = parsed.lastName;
     if (parsed.phone !== undefined) updateData.phone = parsed.phone;
-    if (parsed.studentId !== undefined) updateData.student_id = parsed.studentId;
 
     const { error } = await supabase
       .from('profiles')

@@ -11,7 +11,7 @@ export default function RegisterScreen() {
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1">
         <ScrollView contentContainerClassName="flex-grow" keyboardShouldPersistTaps="handled">
           <Animated.View entering={FadeInDown.duration(400)} className="bg-primary pt-16 pb-10 px-6 items-center rounded-b-[32px]">
-            <Image source={require('@/assets/QueueLess-Logo-Transparent.png')} className="w-16 h-16 mb-3" resizeMode="contain" />
+            <Image source={require('../../assets/QueueLess-Logo-Transparent.png')} className="w-16 h-16 mb-3" resizeMode="contain" />
             <Text variant="h2" className="text-white font-display">Join QueueLess</Text>
             <Text className="text-white/70 text-sm mt-1">Create your account</Text>
           </Animated.View>

@@ -12,7 +12,7 @@ export default function VerifyEmailScreen() {
   return (
     <SafeAreaView className="flex-1 bg-background">
       <Animated.View entering={FadeInDown.duration(400)} className="bg-primary pt-20 pb-12 px-6 items-center rounded-b-[32px]">
-        <Image source={require('@/assets/QueueLess-Logo-Transparent.png')} className="w-20 h-20 mb-4" resizeMode="contain" />
+        <Image source={require('../../assets/QueueLess-Logo-Transparent.png')} className="w-20 h-20 mb-4" resizeMode="contain" />
         <Text variant="h1" className="text-white font-display">QueueLess</Text>
       </Animated.View>
       <Animated.View entering={FadeInUp.duration(400).delay(200)} className="flex-1 justify-center items-center px-8 -mt-8">

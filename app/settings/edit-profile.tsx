@@ -18,7 +18,6 @@ export default function EditProfileScreen() {
 
   const { control, handleSubmit, formState: { isSubmitting } } = useForm<UpdateProfileInput>({
     resolver: zodResolver(updateProfileSchema),
-    defaultValues: { firstName: profile?.first_name ?? '', middleName: profile?.middle_name ?? '', lastName: profile?.last_name ?? '', phone: profile?.phone ?? '', studentId: profile?.student_id ?? '' },
   });
 
   const onSubmit = async (data: UpdateProfileInput) => {
@@ -40,7 +39,6 @@ export default function EditProfileScreen() {
         <Controller name="middleName" control={control} render={({ field }) => <Input placeholder="Middle Name" value={field.value} onChangeText={field.onChange} />} />
         <Controller name="lastName" control={control} render={({ field }) => <Input placeholder="Last Name" value={field.value} onChangeText={field.onChange} />} />
         <Controller name="phone" control={control} render={({ field }) => <Input placeholder="+63 XXX XXX XXXX" keyboardType="phone-pad" value={field.value} onChangeText={field.onChange} />} />
-        <Controller name="studentId" control={control} render={({ field }) => <Input placeholder="Student ID" value={field.value} onChangeText={field.onChange} />} />
         <Button onPress={handleSubmit(onSubmit)} disabled={isSubmitting} className="w-full"><Text>Save Changes</Text></Button>
       </ScrollView>
     </SafeAreaView>

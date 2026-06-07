@@ -30,7 +30,6 @@ export default function ProfileScreen() {
             <AvatarFallback><Text className="text-white font-bold text-lg">{name.slice(0, 2).toUpperCase()}</Text></AvatarFallback>
           </Avatar>
           <Text variant="h3" className="text-foreground mt-4">{name}</Text>
-          {profile?.student_id && <Text variant="small" className="text-muted-foreground">ID: {profile.student_id}</Text>}
           {profile?.role && <View className="bg-primary-light/20 px-3 py-1 rounded-full mt-2"><Text variant="small" className="text-primary-light capitalize">{profile.role}</Text></View>}
         </View>
 

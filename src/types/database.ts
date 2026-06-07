@@ -78,13 +78,6 @@ export type Database = {
             foreignKeyName: "announcements_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
-            referencedRelation: "profile_with_email"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "announcements_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -96,6 +89,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      colleges: {
+        Row: {
+          code: string
+          created_at: string
+          description: string | null
+          display_order: number
+          id: string
+          is_active: boolean
+          name: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          name: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+        }
+        Relationships: []
       }
       counters: {
         Row: {
@@ -271,13 +294,6 @@ export type Database = {
             foreignKeyName: "notifications_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "profile_with_email"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "notifications_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -294,7 +310,6 @@ export type Database = {
           middle_name: string | null
           phone: string | null
           role: Database["public"]["Enums"]["user_role"]
-          student_id: string | null
           updated_at: string
         }
         Insert: {
@@ -307,7 +322,6 @@ export type Database = {
           middle_name?: string | null
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
-          student_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -320,10 +334,44 @@ export type Database = {
           middle_name?: string | null
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
-          student_id?: string | null
           updated_at?: string
         }
         Relationships: []
+      }
+      programs: {
+        Row: {
+          code: string | null
+          college_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+        }
+        Insert: {
+          code?: string | null
+          college_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+        }
+        Update: {
+          code?: string | null
+          college_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "programs_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: false
+            referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       push_tokens: {
         Row: {
@@ -354,13 +402,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "push_tokens_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profile_with_email"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "push_tokens_user_id_fkey"
             columns: ["user_id"]
@@ -444,14 +485,107 @@ export type Database = {
             foreignKeyName: "queue_tickets_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "profile_with_email"
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_guardians: {
+        Row: {
+          created_at: string
+          guardian_id: string
+          id: string
+          is_primary: boolean
+          relationship: string | null
+          student_id: string
+        }
+        Insert: {
+          created_at?: string
+          guardian_id: string
+          id?: string
+          is_primary?: boolean
+          relationship?: string | null
+          student_id: string
+        }
+        Update: {
+          created_at?: string
+          guardian_id?: string
+          id?: string
+          is_primary?: boolean
+          relationship?: string | null
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_guardians_guardian_id_fkey"
+            columns: ["guardian_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "queue_tickets_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: "student_guardians_student_id_fkey"
+            columns: ["student_id"]
             isOneToOne: false
+            referencedRelation: "student_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_profiles: {
+        Row: {
+          college_id: string | null
+          created_at: string
+          education_level: Database["public"]["Enums"]["education_level"]
+          id: string
+          profile_id: string
+          program_id: string | null
+          student_id: string
+          updated_at: string
+          year_level: Database["public"]["Enums"]["year_level"]
+        }
+        Insert: {
+          college_id?: string | null
+          created_at?: string
+          education_level: Database["public"]["Enums"]["education_level"]
+          id?: string
+          profile_id: string
+          program_id?: string | null
+          student_id: string
+          updated_at?: string
+          year_level: Database["public"]["Enums"]["year_level"]
+        }
+        Update: {
+          college_id?: string | null
+          created_at?: string
+          education_level?: Database["public"]["Enums"]["education_level"]
+          id?: string
+          profile_id?: string
+          program_id?: string | null
+          student_id?: string
+          updated_at?: string
+          year_level?: Database["public"]["Enums"]["year_level"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_profiles_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: false
+            referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_profiles_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_profiles_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
             referencedColumns: ["id"]
           },
         ]
@@ -491,13 +625,6 @@ export type Database = {
           ticket_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "ticket_logs_changed_by_fkey"
-            columns: ["changed_by"]
-            isOneToOne: false
-            referencedRelation: "profile_with_email"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "ticket_logs_changed_by_fkey"
             columns: ["changed_by"]
@@ -573,24 +700,7 @@ export type Database = {
       }
     }
     Views: {
-      profile_with_email: {
-        Row: {
-          avatar_url: string | null
-          created_at: string | null
-          email: string | null
-          first_name: string | null
-          full_name: string | null
-          id: string | null
-          is_verified: boolean | null
-          last_name: string | null
-          middle_name: string | null
-          phone: string | null
-          role: Database["public"]["Enums"]["user_role"] | null
-          student_id: string | null
-          updated_at: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       fn_estimate_wait_minutes: {
@@ -617,6 +727,7 @@ export type Database = {
       show_trgm: { Args: { "": string }; Returns: string[] }
     }
     Enums: {
+      education_level: "junior_high" | "senior_high" | "college"
       notification_type:
         | "queue_joined"
         | "almost_your_turn"
@@ -634,6 +745,18 @@ export type Database = {
         | "cancelled"
         | "expired"
       user_role: "student" | "parent" | "staff" | "admin"
+      year_level:
+        | "grade_7"
+        | "grade_8"
+        | "grade_9"
+        | "grade_10"
+        | "grade_11"
+        | "grade_12"
+        | "first_year"
+        | "second_year"
+        | "third_year"
+        | "fourth_year"
+        | "fifth_year"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -764,6 +887,7 @@ export const Constants = {
   },
   public: {
     Enums: {
+      education_level: ["junior_high", "senior_high", "college"],
       notification_type: [
         "queue_joined",
         "almost_your_turn",
@@ -783,6 +907,19 @@ export const Constants = {
         "expired",
       ],
       user_role: ["student", "parent", "staff", "admin"],
+      year_level: [
+        "grade_7",
+        "grade_8",
+        "grade_9",
+        "grade_10",
+        "grade_11",
+        "grade_12",
+        "first_year",
+        "second_year",
+        "third_year",
+        "fourth_year",
+        "fifth_year",
+      ],
     },
   },
 } as const

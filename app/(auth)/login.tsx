@@ -11,8 +11,7 @@ export default function LoginScreen() {
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1">
         <ScrollView contentContainerClassName="flex-grow" keyboardShouldPersistTaps="handled">
           <Animated.View entering={FadeInDown.duration(400)} className="bg-primary pt-16 pb-12 px-6 items-center rounded-b-[32px]">
-            <Image source={require('@/assets/QueueLess-Logo-Transparent.png')}
-              className="w-20 h-20 mb-4" resizeMode="contain" />
+            <Image source={require('../../assets/QueueLess-Logo-Transparent.png')} className="w-20 h-20 mb-4" resizeMode="contain" />
             <Text variant="h1" className="text-white font-display">QueueLess</Text>
             <Text variant="muted" className="text-white/70 mt-1">Skip the line. Save your time.</Text>
           </Animated.View>

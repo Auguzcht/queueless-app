@@ -28,7 +28,7 @@ export default function ForgotPasswordScreen() {
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1">
         <View className="flex-1">
           <Animated.View entering={FadeInDown.duration(400)} className="bg-primary pt-16 pb-10 px-6 items-center rounded-b-[32px]">
-            <Image source={require('@/assets/QueueLess-Logo-Transparent.png')} className="w-16 h-16 mb-3" resizeMode="contain" />
+            <Image source={require('../../assets/QueueLess-Logo-Transparent.png')} className="w-16 h-16 mb-3" resizeMode="contain" />
             <Text variant="h2" className="text-white font-display">Reset Password</Text>
             <Text className="text-white/70 text-sm mt-1">We'll send you a reset link</Text>
           </Animated.View>
