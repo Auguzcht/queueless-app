@@ -1,98 +1,28 @@
-import { TouchableOpacity, View, Text, StyleSheet } from 'react-native';
-import { COLORS, SPACING, FONTS, FONT_SIZES, RADIUS, SHADOWS } from '@/constants/theme';
+import { TouchableOpacity, View } from 'react-native';
+import { Text } from '@/components/ui/text';
+import { Card } from '@/components/ui/card';
 import type { Department } from '@/schemas/department.schema';
 
-interface DepartmentCardProps {
-  department: Department;
-  waitingCount?: number;
-  nowServing?: string;
-  onPress: () => void;
-}
-
-export function DepartmentCard({ department, waitingCount, nowServing, onPress }: DepartmentCardProps) {
+export function DepartmentCard({ dept, waitingCount, nowServing, onPress }: {
+  dept: Department; waitingCount?: number; nowServing?: string; onPress: () => void;
+}) {
   return (
-    <TouchableOpacity
-      style={[styles.card, { borderLeftColor: department.color ?? COLORS.primary }]}
-      onPress={onPress}
-      activeOpacity={0.7}
-    >
-      <View style={styles.top}>
-        <View style={styles.titleRow}>
-          <Text style={styles.name}>{department.name}</Text>
-          <Text style={styles.prefix}>{department.prefix}</Text>
+    <TouchableOpacity onPress={onPress} activeOpacity={0.7} className="mb-3">
+      <Card className="border-l-4 p-4" style={{ borderLeftColor: dept.color ?? '#004E98' }}>
+        <View className="flex-row justify-between items-center mb-1">
+          <Text variant="h4" className="text-foreground">{dept.name}</Text>
+          <Text className="text-muted-foreground font-display text-xl">{dept.prefix}</Text>
         </View>
-        <Text style={styles.description}>{department.description}</Text>
-      </View>
-
-      <View style={styles.stats}>
-        {waitingCount !== undefined && (
-          <View style={styles.stat}>
-            <Text style={styles.statValue}>{waitingCount}</Text>
-            <Text style={styles.statLabel}>Waiting</Text>
-          </View>
-        )}
-        {nowServing && (
-          <View style={styles.stat}>
-            <Text style={[styles.statValue, { color: COLORS.accent }]}>{nowServing}</Text>
-            <Text style={styles.statLabel}>Now Serving</Text>
-          </View>
-        )}
-      </View>
+        <Text variant="small" className="text-muted-foreground mb-3">{dept.description}</Text>
+        <View className="flex-row gap-6">
+          {waitingCount !== undefined && (
+            <View className="items-center"><Text variant="h2" className="text-primary">{waitingCount}</Text><Text variant="small" className="text-muted-foreground">Waiting</Text></View>
+          )}
+          {nowServing && (
+            <View className="items-center"><Text variant="h2" className="text-accent">{nowServing}</Text><Text variant="small" className="text-muted-foreground">Now Serving</Text></View>
+          )}
+        </View>
+      </Card>
     </TouchableOpacity>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: COLORS.surface,
-    borderRadius: RADIUS.md,
-    padding: SPACING.lg,
-    borderLeftWidth: 4,
-    marginBottom: SPACING.md,
-    ...SHADOWS.card,
-  },
-  top: {
-    marginBottom: SPACING.md,
-  },
-  titleRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: SPACING.xs,
-  },
-  name: {
-    fontFamily: FONTS.heading2,
-    fontSize: FONT_SIZES.h3,
-    fontWeight: '600',
-    color: COLORS.textPrimary,
-  },
-  prefix: {
-    fontFamily: FONTS.display,
-    fontSize: 24,
-    fontWeight: '800',
-    color: COLORS.textMuted,
-  },
-  description: {
-    fontFamily: FONTS.body,
-    fontSize: FONT_SIZES.bodySmall,
-    color: COLORS.textSecondary,
-  },
-  stats: {
-    flexDirection: 'row',
-    gap: SPACING.xl,
-  },
-  stat: {
-    alignItems: 'center',
-  },
-  statValue: {
-    fontFamily: FONTS.heading2,
-    fontSize: FONT_SIZES.h2,
-    fontWeight: '700',
-    color: COLORS.primary,
-  },
-  statLabel: {
-    fontFamily: FONTS.bodySmall,
-    fontSize: FONT_SIZES.caption,
-    color: COLORS.textSecondary,
-  },
-});

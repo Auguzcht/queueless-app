@@ -1,60 +1,25 @@
-import { View, Text, StyleSheet } from 'react-native';
-import { COLORS, SPACING, FONTS, FONT_SIZES, RADIUS, SHADOWS } from '@/constants/theme';
+import { View } from 'react-native';
+import { Text } from '@/components/ui/text';
 
-interface StatsRowProps {
-  active: number;
-  completed: number;
-  cancelled: number;
-}
+interface StatsRowProps { active: number; completed: number; cancelled: number }
 
 export function StatsRow({ active, completed, cancelled }: StatsRowProps) {
   return (
-    <View style={styles.container}>
-      <StatItem value={active} label="Active" color={COLORS.primary} />
-      <View style={styles.divider} />
-      <StatItem value={completed} label="Completed" color={COLORS.success} />
-      <View style={styles.divider} />
-      <StatItem value={cancelled} label="Cancelled" color={COLORS.error} />
+    <View className="flex-row bg-card rounded-xl p-4 mx-6 -mt-5 shadow-sm border border-border">
+      <Stat value={active} label="Active" color="#004E98" />
+      <View className="w-px bg-border" />
+      <Stat value={completed} label="Completed" color="#22C55E" />
+      <View className="w-px bg-border" />
+      <Stat value={cancelled} label="Cancelled" color="#EF4444" />
     </View>
   );
 }
 
-function StatItem({ value, label, color }: { value: number; label: string; color: string }) {
+function Stat({ value, label, color }: { value: number; label: string; color: string }) {
   return (
-    <View style={styles.stat}>
-      <Text style={[styles.value, { color }]}>{value}</Text>
-      <Text style={styles.label}>{label}</Text>
+    <View className="flex-1 items-center">
+      <Text variant="h2" className="font-extrabold" style={{ color }}>{value}</Text>
+      <Text variant="small" className="text-muted-foreground">{label}</Text>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    backgroundColor: COLORS.white,
-    borderRadius: RADIUS.md,
-    padding: SPACING.lg,
-    marginHorizontal: SPACING.xl,
-    marginTop: -SPACING.xl,
-    ...SHADOWS.md,
-  },
-  stat: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  value: {
-    fontFamily: FONTS.display,
-    fontSize: FONT_SIZES.h1,
-    fontWeight: '800',
-    marginBottom: SPACING.xs,
-  },
-  label: {
-    fontFamily: FONTS.bodySmall,
-    fontSize: FONT_SIZES.caption,
-    color: COLORS.textSecondary,
-  },
-  divider: {
-    width: 1,
-    backgroundColor: COLORS.border,
-  },
-});

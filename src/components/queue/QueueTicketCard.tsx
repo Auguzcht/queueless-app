@@ -1,48 +1,18 @@
-import { View, Text, StyleSheet } from 'react-native';
-import { COLORS, SPACING, FONTS, FONT_SIZES, RADIUS, SHADOWS } from '@/constants/theme';
+import { View } from 'react-native';
+import { Text } from '@/components/ui/text';
+import { Card } from '@/components/ui/card';
 import { QueueStatusBadge } from '@/components/queue/QueueStatusBadge';
 import { formatRelativeTime } from '@/utils/format';
 import type { QueueTicket } from '@/schemas/queue.schema';
 
-interface QueueTicketCardProps {
-  ticket: QueueTicket;
-}
-
-export function QueueTicketCard({ ticket }: QueueTicketCardProps) {
+export function QueueTicketCard({ ticket }: { ticket: QueueTicket }) {
   return (
-    <View style={styles.card}>
-      <View style={styles.top}>
-        <Text style={styles.ticketNumber}>{ticket.ticket_number}</Text>
+    <Card className="mb-2 p-4">
+      <View className="flex-row justify-between items-center mb-1">
+        <Text variant="h4" className="text-foreground">{ticket.ticket_number}</Text>
         <QueueStatusBadge status={ticket.status} />
       </View>
-      <Text style={styles.date}>{formatRelativeTime(ticket.joined_at)}</Text>
-    </View>
+      <Text variant="small" className="text-muted-foreground">{formatRelativeTime(ticket.joined_at)}</Text>
+    </Card>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: COLORS.surface,
-    borderRadius: RADIUS.md,
-    padding: SPACING.lg,
-    marginBottom: SPACING.sm,
-    ...SHADOWS.card,
-  },
-  top: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: SPACING.xs,
-  },
-  ticketNumber: {
-    fontFamily: FONTS.heading2,
-    fontSize: FONT_SIZES.h3,
-    fontWeight: '600',
-    color: COLORS.textPrimary,
-  },
-  date: {
-    fontFamily: FONTS.bodySmall,
-    fontSize: FONT_SIZES.bodySmall,
-    color: COLORS.textSecondary,
-  },
-});

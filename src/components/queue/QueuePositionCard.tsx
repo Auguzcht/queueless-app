@@ -1,47 +1,14 @@
-import { View, Text, StyleSheet } from 'react-native';
-import { COLORS, SPACING, FONTS, FONT_SIZES, RADIUS } from '@/constants/theme';
+import { View } from 'react-native';
+import { Text } from '@/components/ui/text';
 
-interface QueuePositionCardProps {
-  position: number;
-  totalAhead: number;
-}
-
-export function QueuePositionCard({ position, totalAhead }: QueuePositionCardProps) {
+export function QueuePositionCard({ position, totalAhead }: { position: number; totalAhead: number }) {
   return (
-    <View style={styles.card}>
-      <Text style={styles.label}>Your Position</Text>
-      <Text style={styles.position}>#{position}</Text>
-      <Text style={styles.ahead}>
+    <View className="border-l-4 border-l-primary bg-card rounded-xl p-4">
+      <Text variant="small" className="text-muted-foreground mb-1">Your Position</Text>
+      <Text variant="h2" className="text-primary font-display">#{position}</Text>
+      <Text variant="default" className="text-muted-foreground">
         {totalAhead === 0 ? "You're next!" : `${totalAhead} people ahead of you`}
       </Text>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    borderLeftWidth: 4,
-    borderLeftColor: COLORS.primary,
-    backgroundColor: COLORS.surface,
-    borderRadius: RADIUS.md,
-    padding: SPACING.lg,
-  },
-  label: {
-    fontFamily: FONTS.bodyMedium,
-    fontSize: FONT_SIZES.bodySmall,
-    color: COLORS.textSecondary,
-    marginBottom: SPACING.xs,
-  },
-  position: {
-    fontFamily: FONTS.display,
-    fontSize: 36,
-    fontWeight: '800',
-    color: COLORS.primary,
-    marginBottom: SPACING.xs,
-  },
-  ahead: {
-    fontFamily: FONTS.body,
-    fontSize: FONT_SIZES.body,
-    color: COLORS.textSecondary,
-  },
-});

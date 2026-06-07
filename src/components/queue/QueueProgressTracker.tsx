@@ -1,71 +1,32 @@
-import { View, Text, StyleSheet } from 'react-native';
-import { COLORS, SPACING, FONTS, FONT_SIZES } from '@/constants/theme';
+import { View } from 'react-native';
+import { Text } from '@/components/ui/text';
 import { ClipboardList, Clock, Bell, CheckCircle2 } from 'lucide-react-native';
+import { Icon } from '@/components/ui/icon';
 
-type ProgressStep = 'joined' | 'in_line' | 'almost' | 'served';
+type Step = 'joined' | 'in_line' | 'almost' | 'served';
+const STEPS: { key: Step; label: string; icon: any }[] = [
+  { key: 'joined', label: 'Joined', icon: ClipboardList },
+  { key: 'in_line', label: 'In Line', icon: Clock },
+  { key: 'almost', label: 'Almost', icon: Bell },
+  { key: 'served', label: 'Served', icon: CheckCircle2 },
+];
 
-interface QueueProgressTrackerProps {
-  currentStep: ProgressStep;
-}
-
-const STEPS = [
-  { key: 'joined', label: 'Joined', Icon: ClipboardList },
-  { key: 'in_line', label: 'In Line', Icon: Clock },
-  { key: 'almost', label: 'Almost', Icon: Bell },
-  { key: 'served', label: 'Served', Icon: CheckCircle2 },
-] as const;
-
-export function QueueProgressTracker({ currentStep }: QueueProgressTrackerProps) {
-  const currentIndex = STEPS.findIndex((s) => s.key === currentStep);
-
+export function QueueProgressTracker({ currentStep }: { currentStep: Step }) {
+  const idx = STEPS.findIndex((s) => s.key === currentStep);
   return (
-    <View style={styles.container}>
-      {STEPS.map((step, index) => {
-        const isCompleted = index <= currentIndex;
-        const isCurrent = index === currentIndex;
-
+    <View className="flex-row justify-between items-start py-3">
+      {STEPS.map((s, i) => {
+        const done = i <= idx;
         return (
-          <View key={step.key} style={styles.step}>
-            <View style={[styles.dot, isCompleted && styles.dotActive, isCurrent && styles.dotCurrent]}>
-              <step.Icon size={16} color={isCompleted ? COLORS.white : COLORS.textMuted} strokeWidth={2} />
+          <View key={s.key} className="items-center flex-1">
+            <View className={`w-9 h-9 rounded-full items-center justify-center mb-2 ${done ? 'bg-primary' : 'bg-muted'}`}>
+              <Icon as={s.icon} size={16} color={done ? '#FFFFFF' : '#9CA3AF'} />
             </View>
-            <Text style={[styles.label, isCompleted && styles.labelActive]}>
-              {step.label}
-            </Text>
-            {index < STEPS.length - 1 && (
-              <View style={[styles.line, isCompleted && styles.lineActive]} />
-            )}
+            <Text variant="small" className={`text-center ${done ? 'text-primary font-semibold' : 'text-muted-foreground'}`}>{s.label}</Text>
+            {i < STEPS.length - 1 && <View className={`absolute top-[18px] left-[60%] right-[-40%] h-0.5 ${done ? 'bg-primary' : 'bg-muted'}`} />}
           </View>
         );
       })}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    paddingVertical: SPACING.lg,
-  },
-  step: { alignItems: 'center', flex: 1 },
-  dot: {
-    width: 36, height: 36, borderRadius: 18,
-    backgroundColor: COLORS.bgTertiary,
-    alignItems: 'center', justifyContent: 'center',
-    marginBottom: SPACING.sm,
-  },
-  dotActive: { backgroundColor: COLORS.primary },
-  dotCurrent: { backgroundColor: COLORS.primary },
-  label: {
-    fontFamily: FONTS.bodySmall, fontSize: FONT_SIZES.caption,
-    color: COLORS.textMuted, textAlign: 'center',
-  },
-  labelActive: { color: COLORS.primary, fontWeight: '600' },
-  line: {
-    position: 'absolute', top: 18, left: '60%', right: '-40%',
-    height: 2, backgroundColor: COLORS.bgTertiary,
-  },
-  lineActive: { backgroundColor: COLORS.primary },
-});

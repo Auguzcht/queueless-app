@@ -1,54 +1,21 @@
-import { View, Text, StyleSheet } from 'react-native';
-import { COLORS, SPACING, FONTS, FONT_SIZES } from '@/constants/theme';
+import { View } from 'react-native';
+import { Text } from '@/components/ui/text';
+import { Clock } from 'lucide-react-native';
+import { Icon } from '@/components/ui/icon';
 import { formatWaitTime } from '@/utils/format';
 
-interface WaitTimeEstimateProps {
-  minMinutes: number;
-  maxMinutes: number;
-  confidence?: 'high' | 'medium' | 'low';
-}
-
-export function WaitTimeEstimate({ minMinutes, maxMinutes, confidence = 'medium' }: WaitTimeEstimateProps) {
-  const confidenceLabel = { high: 'AI estimate', medium: 'Estimate', low: 'Rough estimate' };
-
+export function WaitTimeEstimate({ minMinutes, maxMinutes, confidence = 'medium' }: {
+  minMinutes: number; maxMinutes: number; confidence?: 'high' | 'medium' | 'low';
+}) {
+  const label = { high: 'AI estimate', medium: 'Estimate', low: 'Rough estimate' };
   return (
-    <View style={styles.container}>
-      <Text style={styles.clock}>⏱</Text>
+    <View className="flex-row items-center gap-3">
+      <Icon as={Clock} size={28} color="#6B7280" />
       <View>
-        <Text style={styles.time}>{formatWaitTime(minMinutes)}</Text>
-        {minMinutes !== maxMinutes && (
-          <Text style={styles.range}>Up to {formatWaitTime(maxMinutes)}</Text>
-        )}
-        <Text style={styles.confidence}>{confidenceLabel[confidence]}</Text>
+        <Text variant="h4" className="text-foreground">{formatWaitTime(minMinutes)}</Text>
+        {minMinutes !== maxMinutes && <Text variant="small" className="text-muted-foreground">Up to {formatWaitTime(maxMinutes)}</Text>}
+        <Text variant="small" className="text-muted-foreground">{label[confidence]}</Text>
       </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.md,
-  },
-  clock: {
-    fontSize: 28,
-  },
-  time: {
-    fontFamily: FONTS.heading2,
-    fontSize: FONT_SIZES.h3,
-    fontWeight: '600',
-    color: COLORS.textPrimary,
-  },
-  range: {
-    fontFamily: FONTS.bodySmall,
-    fontSize: FONT_SIZES.bodySmall,
-    color: COLORS.textSecondary,
-  },
-  confidence: {
-    fontFamily: FONTS.bodySmall,
-    fontSize: FONT_SIZES.caption,
-    color: COLORS.textMuted,
-    marginTop: 2,
-  },
-});

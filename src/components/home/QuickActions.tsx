@@ -1,62 +1,28 @@
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { COLORS, SPACING, FONTS, FONT_SIZES, RADIUS, SHADOWS } from '@/constants/theme';
+import { View, TouchableOpacity } from 'react-native';
+import { Text } from '@/components/ui/text';
 import { router } from 'expo-router';
 import { Ticket, ClipboardList, Bell, Eye } from 'lucide-react-native';
+import { Icon } from '@/components/ui/icon';
 
 const ACTIONS = [
-  { icon: Ticket, iconColor: COLORS.primary, label: 'Join Queue', route: '/services' },
-  { icon: ClipboardList, iconColor: COLORS.success, label: 'My Tickets', route: '/my-queue' },
-  { icon: Bell, iconColor: COLORS.accent, label: 'Notifications', route: '/notifications' },
-  { icon: Eye, iconColor: COLORS.primaryLight, label: 'Live Board', route: '/services' },
+  { icon: Ticket, color: '#004E98', label: 'Join Queue', route: '/services' },
+  { icon: ClipboardList, color: '#22C55E', label: 'My Tickets', route: '/my-queue' },
+  { icon: Bell, color: '#FF6700', label: 'Notifications', route: '/notifications' },
+  { icon: Eye, color: '#3A6EA5', label: 'Live Board', route: '/services' },
 ] as const;
 
 export function QuickActions() {
   return (
-    <View style={styles.grid}>
-      {ACTIONS.map((action) => (
-        <TouchableOpacity
-          key={action.label}
-          style={styles.action}
-          onPress={() => router.push(action.route as any)}
-          activeOpacity={0.7}
-        >
-          <View style={[styles.iconWrap, { backgroundColor: action.iconColor + '15' }]}>
-            <action.icon size={24} color={action.iconColor} strokeWidth={1.5} />
+    <View className="flex-row flex-wrap gap-3 px-6">
+      {ACTIONS.map((a) => (
+        <TouchableOpacity key={a.label} onPress={() => router.push(a.route as any)} activeOpacity={0.7}
+          className="w-[47%] bg-card rounded-xl p-4 items-center shadow-sm border border-border">
+          <View className="w-12 h-12 rounded-full items-center justify-center mb-2" style={{ backgroundColor: a.color + '15' }}>
+            <Icon as={a.icon} size={24} color={a.color} />
           </View>
-          <Text style={styles.label}>{action.label}</Text>
+          <Text variant="small" className="text-foreground font-medium">{a.label}</Text>
         </TouchableOpacity>
       ))}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: SPACING.md,
-    paddingHorizontal: SPACING.xl,
-  },
-  action: {
-    width: '47%',
-    backgroundColor: COLORS.white,
-    borderRadius: RADIUS.md,
-    padding: SPACING.lg,
-    alignItems: 'center',
-    ...SHADOWS.card,
-  },
-  iconWrap: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: SPACING.sm,
-  },
-  label: {
-    fontFamily: FONTS.bodyMedium,
-    fontSize: FONT_SIZES.bodySmall,
-    color: COLORS.textPrimary,
-    fontWeight: '500',
-  },
-});

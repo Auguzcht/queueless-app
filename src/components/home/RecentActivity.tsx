@@ -1,28 +1,22 @@
-import { View, Text } from 'react-native';
+import { View } from 'react-native';
+import { Text } from '@/components/ui/text';
 import { QueueTicketCard } from '@/components/queue/QueueTicketCard';
 import type { QueueTicket } from '@/schemas/queue.schema';
 
-interface RecentActivityProps { tickets: QueueTicket[] }
+interface Props { tickets: QueueTicket[] }
 
-export function RecentActivity({ tickets }: RecentActivityProps) {
-  if (tickets.length === 0) {
-    return (
-      <View className="px-6 mt-6">
-        <Text className="text-lg font-heading-semi text-foreground mb-4">Recent Activity</Text>
-        <View className="items-center py-8">
-          <Text className="text-lg font-heading-semi text-foreground text-center mb-1">No recent activity</Text>
-          <Text className="text-sm font-body text-muted-foreground text-center">Join a queue to see your history here</Text>
-        </View>
-      </View>
-    );
-  }
-
+export function RecentActivity({ tickets }: Props) {
   return (
     <View className="px-6 mt-6">
-      <Text className="text-lg font-heading-semi text-foreground mb-4">Recent Activity</Text>
-      {tickets.slice(0, 5).map((ticket) => (
-        <QueueTicketCard key={ticket.id} ticket={ticket} />
-      ))}
+      <Text variant="h4" className="text-foreground mb-4">Recent Activity</Text>
+      {tickets.length === 0 ? (
+        <View className="items-center py-8">
+          <Text className="text-foreground text-center mb-1">No recent activity</Text>
+          <Text variant="muted" className="text-center">Join a queue to see your history here</Text>
+        </View>
+      ) : (
+        tickets.slice(0, 5).map((t) => <QueueTicketCard key={t.id} ticket={t} />)
+      )}
     </View>
   );
 }
