@@ -37,7 +37,7 @@ export default function RootLayout() {
   if (!fontsLoaded && !fontError) return null;
 
   return (
-    <GestureHandlerRootView className="flex-1">
+    <GestureHandlerRootView style={{ flex: 1 }}>
       <StatusBar style={session ? 'light' : 'dark'} />
       <Stack screenOptions={{ headerShown: false }}>
         {session ? (
