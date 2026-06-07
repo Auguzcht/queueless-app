@@ -1,0 +1,11 @@
+{
+  "$schema": "https://reactnativereusables.com/schema.json",
+  "style": "nativewind",
+  "tailwind": {
+    "config": "tailwind.config.js"
+  },
+  "aliases": {
+    "components": "@/components/ui",
+    "lib": "@/lib"
+  }
+}
