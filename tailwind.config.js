@@ -1,10 +1,46 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ['./App.{js,ts,tsx}', './components/**/*.{js,ts,tsx}'],
-
+  content: ['./app/**/*.{ts,tsx}', './src/**/*.{ts,tsx}'],
   presets: [require('nativewind/preset')],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        primary: '#004E98',
+        'primary-light': '#3A6EA5',
+        'primary-foreground': '#FFFFFF',
+        accent: '#FF6700',
+        'accent-foreground': '#FFFFFF',
+        background: '#FFFFFF',
+        foreground: '#1A1A2E',
+        card: '#FFFFFF',
+        'card-foreground': '#1A1A2E',
+        secondary: '#F5F7FA',
+        'secondary-foreground': '#1A1A2E',
+        muted: '#EBEBEB',
+        'muted-foreground': '#9CA3AF',
+        destructive: '#EF4444',
+        'destructive-foreground': '#FFFFFF',
+        success: '#22C55E',
+        warning: '#F59E0B',
+        border: '#E2E8F0',
+        input: '#E2E8F0',
+        ring: '#004E98',
+      },
+      fontFamily: {
+        display: ['PlusJakartaSans-ExtraBold'],
+        heading: ['PlusJakartaSans-Bold'],
+        'heading-semi': ['PlusJakartaSans-SemiBold'],
+        body: ['Inter-Regular'],
+        'body-medium': ['Inter-Medium'],
+        'body-semi': ['Inter-SemiBold'],
+      },
+      borderRadius: {
+        sm: '8px',
+        md: '12px',
+        lg: '16px',
+        xl: '24px',
+      },
+    },
   },
   plugins: [],
 };
