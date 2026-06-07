@@ -1,5 +1,5 @@
 {
-  "name": "my-expo-app",
+  "name": "queueless-app",
   "version": "1.0.0",
   "scripts": {
     "android": "expo start --android",
@@ -8,6 +8,8 @@
     "prebuild": "expo prebuild",
     "lint": "eslint \"**/*.{js,jsx,ts,tsx}\" && prettier -c \"**/*.{js,jsx,ts,tsx,json}\"",
     "format": "eslint \"**/*.{js,jsx,ts,tsx}\" --fix && prettier \"**/*.{js,jsx,ts,tsx,json}\" --write",
+    "reset": "lsof -ti:8081 | xargs kill -9 2>/dev/null; echo 'Port 8081 freed'",
+    "types": "supabase gen types typescript --linked --workdir . > src/types/database.ts",
     "web": "expo start --web"
   },
   "dependencies": {
@@ -62,6 +64,6 @@
     "tailwindcss": "^3.4.0",
     "typescript": "~5.9.2"
   },
-  "main": "node_modules/expo/AppEntry.js",
+  "main": "expo-router/entry",
   "private": true
 }
