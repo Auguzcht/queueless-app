@@ -43,7 +43,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   signOut: async () => {
     await authService.signOut();
-    get().reset();
+    // listener handles setSession(null) — no separate reset needed
   },
 
   setSession: (session) => {
@@ -65,7 +65,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   updateProfile: async (data) => {
-    const { session, profile } = get();
+    const { session } = get();
     if (!session?.user?.id) return;
     await profileService.updateProfile(session.user.id, data);
     await get().fetchProfile();
