@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { View, ScrollView, KeyboardAvoidingView, Platform, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { Confetti } from '@/components/ui/confetti';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeIn, useAnimatedStyle, useSharedValue, withTiming, Easing } from 'react-native-reanimated';
@@ -8,12 +9,14 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { authService } from '@/services/auth.service';
+import { profileService } from '@/services/profile.service';
 import { supabase } from '@/lib/supabase';
 
 
 import { router } from 'expo-router';
-import { ChevronRight, CheckCircle2, GraduationCap, Users, School, BookOpen, Eye, EyeOff } from 'lucide-react-native';
+import { ChevronRight, CheckCircle2, GraduationCap, Users, School, BookOpen, Eye, EyeOff, Camera } from 'lucide-react-native';
 import { Icon } from '@/components/ui/icon';
+import { PasswordStrength } from '@/components/ui/password-strength';
 
 type UserType = 'student' | 'parent';
 type EduLevel = 'junior_high' | 'senior_high' | 'college';
@@ -22,12 +25,14 @@ type YearLvl = 'grade_7' | 'grade_8' | 'grade_9' | 'grade_10' | 'grade_11' | 'gr
 
 interface OnboardingData {
   userType: UserType | null;
-  firstName: string; middleName: string; lastName: string;
+  firstName: string; middleName: string; lastName: string; suffix: string;
   email: string; phone: string; studentId: string;
   educationLevel: EduLevel | null; yearLevel: YearLvl | null;
   collegeId: string | null; programId: string | null;
-  parentStudentId: string;  // for linking a child
+  parentStudentId: string;
+  relationship: string;
   password: string; confirmPassword: string;
+  avatarUri: string | null;
 }
 
 const COLLEGES = [
@@ -60,34 +65,11 @@ const YEAR_LABELS: Record<string, string> = {
   first_year: '1st Year', second_year: '2nd Year', third_year: '3rd Year', fourth_year: '4th Year', fifth_year: '5th Year',
 };
 
-function pwScore(pw: string): number {
-  let s = 0;
-  if (pw.length >= 8) s += 25;
-  if (/[A-Z]/.test(pw)) s += 25;
-  if (/[0-9]/.test(pw)) s += 25;
-  if (/[^A-Za-z0-9]/.test(pw)) s += 25;
-  return s;
-}
-
-function pwColor(pw: string): string {
-  const s = pwScore(pw);
-  if (s < 50) return '#EF4444';
-  if (s < 75) return '#F59E0B';
-  return '#22C55E';
-}
-
-function pwLabel(pw: string): string {
-  const s = pwScore(pw);
-  if (s < 25) return 'Very weak';
-  if (s < 50) return 'Weak';
-  if (s < 75) return 'Fair';
-  return 'Strong';
-}
-
 function getStudentSteps() {
   return [
     { title: 'Who are you?', desc: 'Select your account type' },
     { title: 'Your Name', desc: 'Tell us who you are' },
+    { title: 'Profile Photo', desc: 'Add a profile picture' },
     { title: 'School Email', desc: 'Your MMCM email and student ID' },
     { title: 'Education Level', desc: 'Your current year and program' },
     { title: 'Secure Account', desc: 'Create your password' },
@@ -98,6 +80,7 @@ function getParentSteps() {
   return [
     { title: 'Who are you?', desc: 'Select your account type' },
     { title: 'Your Name', desc: 'Tell us who you are' },
+    { title: 'Profile Photo', desc: 'Add a profile picture' },
     { title: 'Contact Info', desc: 'Your email and phone number' },
     { title: 'Link Student', desc: 'Connect to your child\'s account' },
     { title: 'Secure Account', desc: 'Create your password' },
@@ -108,10 +91,10 @@ export default function OnboardingScreen() {
   const [userType, setUserType] = useState<UserType | null>(null);
   const [step, setStep] = useState(0);
   const [data, setData] = useState<OnboardingData>({
-    userType: null, firstName: '', middleName: '', lastName: '',
-    email: '', phone: '', studentId: '', parentStudentId: '',
+    userType: null, firstName: '', middleName: '', lastName: '', suffix: '',
+    email: '', phone: '', studentId: '', parentStudentId: '', relationship: '',
     educationLevel: null, yearLevel: null, collegeId: null, programId: null,
-    password: '', confirmPassword: '',
+    password: '', confirmPassword: '', avatarUri: null,
   });
   const [success, setSuccess] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -128,7 +111,7 @@ export default function OnboardingScreen() {
   const [showPw, setShowPw] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [studentLookup, setStudentLookup] = useState<'idle' | 'found' | 'not_found'>('idle');
-  const { signUp } = useAuthStore();
+  const { signUp, session } = useAuthStore();
 
   const lookupTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const handleStudentLookup = (id: string) => {
@@ -157,15 +140,16 @@ export default function OnboardingScreen() {
   const canProceed = () => {
     if (step === 0) return userType !== null;
     if (step === 1) return data.firstName.length > 0 && data.lastName.length > 0;
+    if (step === 2) return true; // photo is optional
     if (userType === 'student') {
-      if (step === 2) return data.email.includes('@') && data.studentId.length === 10;
-      if (step === 3) return data.educationLevel !== null && data.yearLevel !== null
+      if (step === 3) return data.email.includes('@') && data.studentId.length === 10;
+      if (step === 4) return data.educationLevel !== null && data.yearLevel !== null
         && (data.educationLevel !== 'college' || (data.collegeId !== null && data.programId !== null));
-      if (step === 4) return data.password.length >= 8 && data.password === data.confirmPassword;
+      if (step === 5) return data.password.length >= 8 && data.password === data.confirmPassword;
     } else {
-      if (step === 2) return data.email.includes('@');
-      if (step === 3) return true;  // linking is optional
-      if (step === 4) return data.password.length >= 8 && data.password === data.confirmPassword;
+      if (step === 3) return data.email.includes('@');
+      if (step === 4) return true;
+      if (step === 5) return data.password.length >= 8 && data.password === data.confirmPassword;
     }
     return false;
   };
@@ -184,16 +168,27 @@ export default function OnboardingScreen() {
         firstName: data.firstName, middleName: data.middleName, lastName: data.lastName,
         email: data.email, password: data.password, confirmPassword: data.password,
         userType: data.userType ?? undefined,
+        suffix: data.suffix || undefined,
         studentId: data.studentId,
         parentStudentId: data.parentStudentId || undefined,
+        relationship: data.relationship || undefined,
         educationLevel: data.educationLevel ?? undefined,
         yearLevel: data.yearLevel ?? undefined,
         collegeId: data.educationLevel === 'college' ? (data.collegeId ?? undefined) : undefined,
         programId: data.educationLevel === 'college' ? (data.programId ?? undefined) : undefined,
       });
 
-      // Sign in to get a session (trigger auto-confirms but response doesn't include session)
-      await authService.signInWithEmail({ email: data.email, password: data.password });
+      // Sign in to get a session
+      const loggedIn = await authService.signInWithEmail({ email: data.email, password: data.password });
+
+      // Upload avatar if one was selected
+      if (data.avatarUri && loggedIn.session?.user?.id) {
+        try {
+          await profileService.uploadAvatar(loggedIn.session.user.id, data.avatarUri);
+        } catch (e) {
+          console.error('Avatar upload failed:', e);
+        }
+      }
 
       setSuccess(true);
     } catch (err) {
@@ -270,8 +265,44 @@ export default function OnboardingScreen() {
               </View>
             )}
 
-            {/* Step 2 — Student: Email + ID | Parent: Email */}
-            {step === 2 && userType === 'student' && (
+            {/* Step 2 — Photo (shared) */}
+            {step === 2 && (
+              <View className="items-center gap-4 py-4">
+                <View className="w-28 h-28 rounded-full bg-muted items-center justify-center overflow-hidden">
+                  {data.avatarUri ? (
+                    <Image source={{ uri: data.avatarUri }} className="w-full h-full" resizeMode="cover" />
+                  ) : (
+                    <Icon as={Camera} size={36} color="#9CA3AF" />
+                  )}
+                </View>
+                <TouchableOpacity onPress={async () => {
+                  const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+                  if (status !== 'granted') return;
+                  const result = await ImagePicker.launchImageLibraryAsync({
+                    mediaTypes: ['images'],
+                    allowsEditing: true,
+                    aspect: [1, 1],
+                    quality: 0.7,
+                  });
+                  if (!result.canceled && result.assets[0]) {
+                    update('avatarUri', result.assets[0].uri);
+                  }
+                }} activeOpacity={0.7} className="bg-primary rounded-full px-6 py-3">
+                  <Text className="text-white font-semibold text-sm">
+                    {data.avatarUri ? 'Change Photo' : 'Upload Photo'}
+                  </Text>
+                </TouchableOpacity>
+                {data.avatarUri && (
+                  <TouchableOpacity onPress={() => update('avatarUri', null)}>
+                    <Text className="text-red-500 text-sm">Remove</Text>
+                  </TouchableOpacity>
+                )}
+                <Text variant="small" className="text-muted-foreground text-center">You can also skip this and add one later</Text>
+              </View>
+            )}
+
+            {/* Step 3 — Student: Email + ID | Parent: Email */}
+            {step === 3 && userType === 'student' && (
               <View className="gap-4">
                 <Input placeholder="your@mcm.edu.ph" keyboardType="email-address" autoCapitalize="none" value={data.email} onChangeText={(v) => update('email', v)} />
                 <Input placeholder="Student ID (e.g. 2021120266)" keyboardType="number-pad" maxLength={10} value={data.studentId} onChangeText={(v) => update('studentId', v.replace(/[^0-9]/g, ''))} />
@@ -280,12 +311,12 @@ export default function OnboardingScreen() {
                     <Text className="text-foreground font-medium">🇵🇭 +63</Text>
                   </View>
                   <View className="flex-1">
-                    <Input placeholder="Phone (optional)" keyboardType="number-pad" maxLength={10} value={data.phone} onChangeText={(v) => { const n = v.replace(/[^0-9]/g, ''); update('phone', n.startsWith('9') ? n : '9' + n); }} />
+                    <Input placeholder="Phone (optional)" keyboardType="number-pad" maxLength={10} value={data.phone} onChangeText={(v) => { update('phone', v.replace(/[^0-9]/g, '')); }} />
                   </View>
                 </View>
               </View>
             )}
-            {step === 2 && userType === 'parent' && (
+            {step === 3 && userType === 'parent' && (
               <View className="gap-4">
                 <Input placeholder="your@email.com" keyboardType="email-address" autoCapitalize="none" value={data.email} onChangeText={(v) => update('email', v)} />
                 <View className="flex-row gap-3">
@@ -293,14 +324,14 @@ export default function OnboardingScreen() {
                     <Text className="text-foreground font-medium">🇵🇭 +63</Text>
                   </View>
                   <View className="flex-1">
-                    <Input placeholder="Phone (optional)" keyboardType="number-pad" maxLength={10} value={data.phone} onChangeText={(v) => { const n = v.replace(/[^0-9]/g, ''); update('phone', n.startsWith('9') ? n : '9' + n); }} />
+                    <Input placeholder="Phone (optional)" keyboardType="number-pad" maxLength={10} value={data.phone} onChangeText={(v) => { update('phone', v.replace(/[^0-9]/g, '')); }} />
                   </View>
                 </View>
               </View>
             )}
 
-            {/* Step 3 — Student: Education Level + College/Program */}
-            {step === 3 && userType === 'student' && (
+            {/* Step 4 — Student: Education Level + College/Program */}
+            {step === 4 && userType === 'student' && (
               <View className="gap-4">
                 <Text className="text-foreground font-semibold text-base">Education Level</Text>
                 {(['junior_high', 'senior_high', 'college'] as EduLevel[]).map((el) => (
@@ -354,9 +385,8 @@ export default function OnboardingScreen() {
               </View>
             )}
 
-            {/* Step 4/3 — Password (shared) */}
-            {/* Step 3 — Parent: Link Student (optional) */}
-            {step === 3 && userType === 'parent' && (
+            {/* Step 4 — Parent: Link Student (optional) */}
+            {step === 4 && userType === 'parent' && (
               <View className="gap-4">
                 <Text className="text-foreground font-semibold text-base">Link to your child</Text>
                 <Text variant="small" className="text-muted-foreground -mt-3">Enter your child's student ID to connect accounts. You can skip this and link later.</Text>
@@ -376,10 +406,25 @@ export default function OnboardingScreen() {
                 </View>
                 {studentLookup === 'found' && <Text variant="small" className="text-success">Student found ✓</Text>}
                 {studentLookup === 'not_found' && <Text variant="small" className="text-destructive">No student found with that ID</Text>}
+
+                {data.parentStudentId.length === 10 && studentLookup === 'found' && (
+                  <>
+                    <Text className="text-foreground font-semibold text-base mt-2">Your relationship</Text>
+                    <Text variant="small" className="text-muted-foreground -mt-2">How are you related to this student?</Text>
+                    <View className="flex-row flex-wrap gap-2">
+                      {['Mother', 'Father', 'Guardian', 'Grandparent', 'Other'].map((r) => (
+                        <TouchableOpacity key={r} onPress={() => update('relationship', r)}
+                          className={`rounded-full border-2 px-5 py-2.5 ${data.relationship === r ? 'border-primary bg-primary/10' : 'border-border bg-card'}`}>
+                          <Text className={`text-sm font-medium ${data.relationship === r ? 'text-primary' : 'text-foreground'}`}>{r}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </>
+                )}
               </View>
             )}
 
-            {((userType === 'student' && step === 4) || (userType === 'parent' && step === 4)) && (
+            {((userType === 'student' && step === 5) || (userType === 'parent' && step === 5)) && (
               <View className="gap-4">
                 {/* Password field */}
                 <View className="relative">
@@ -390,8 +435,8 @@ export default function OnboardingScreen() {
                   </TouchableOpacity>
                 </View>
 
-                {/* Strength indicator with smooth animation */}
-                {data.password.length > 0 && <PasswordStrength password={data.password} />}
+                {/* Strength indicator */}
+                <PasswordStrength password={data.password} />
                 {/* Confirm password */}
                 <View className="relative">
                   <Input placeholder="Confirm password" secureTextEntry={!showConfirm} value={data.confirmPassword}
@@ -428,25 +473,4 @@ export default function OnboardingScreen() {
   );
 }
 
-function PasswordStrength({ password }: { password: string }) {
-  const score = pwScore(password);
-  const color = pwColor(password);
-  const label = pwLabel(password);
-  const width = useSharedValue(0);
 
-  width.value = withTiming(score, { duration: 400, easing: Easing.out(Easing.cubic) });
-
-  const barStyle = useAnimatedStyle(() => ({
-    width: `${width.value}%`,
-    backgroundColor: color,
-  }));
-
-  return (
-    <View className="gap-1.5">
-      <View className="h-1.5 bg-muted rounded-full overflow-hidden">
-        <Animated.View className="h-full rounded-full" style={[{ backgroundColor: color }, barStyle]} />
-      </View>
-      <Text variant="small" className={color === '#22C55E' ? 'text-success' : 'text-muted-foreground'}>{label}</Text>
-    </View>
-  );
-}

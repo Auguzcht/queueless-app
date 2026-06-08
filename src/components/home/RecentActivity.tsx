@@ -7,7 +7,7 @@ interface Props { tickets: QueueTicket[] }
 
 export function RecentActivity({ tickets }: Props) {
   return (
-    <View className="px-6 mt-6">
+    <View className="mt-6">
       <Text variant="h4" className="text-foreground mb-4">Recent Activity</Text>
       {tickets.length === 0 ? (
         <View className="items-center py-8">

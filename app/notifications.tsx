@@ -1,13 +1,13 @@
 import { useEffect } from 'react';
-import { View, FlatList, TouchableOpacity } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text } from '@/components/ui/text';
+import { View, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
+import { Stack, router } from 'expo-router';
 import { Icon } from '@/components/ui/icon';
+import { ChevronLeft, Bell } from 'lucide-react-native';
+import { Text } from '@/components/ui/text';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useNotificationStore } from '@/stores/useNotificationStore';
 import { formatRelativeTime } from '@/utils/format';
-import { Bell, ChevronLeft } from 'lucide-react-native';
-import { router } from 'expo-router';
+
 
 export default function NotificationsScreen() {
   const userId = useAuthStore((s) => s.session?.user?.id);
@@ -20,23 +20,25 @@ export default function NotificationsScreen() {
   const unread = notifications.filter((n) => !n.is_read);
 
   return (
-    <View className="flex-1 bg-[#F8F9FA]">
-      {/* Header */}
-      <SafeAreaView className="bg-[#F8F9FA]" edges={['top']}>
-        <View className="flex-row items-center justify-between px-6 pb-3 pt-2">
-          <View className="flex-row items-center gap-3">
-            <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7} className="w-9 h-9 rounded-full bg-gray-100 items-center justify-center">
-              <Icon as={ChevronLeft} size={20} color="#1A1A2E" />
-            </TouchableOpacity>
-            <Text className="text-foreground text-xl font-bold font-display">Notifications</Text>
-          </View>
-          {unread.length > 0 && (
-            <TouchableOpacity onPress={() => userId && markAllAsRead(userId)} activeOpacity={0.7}>
-              <Text className="text-[#004E98] text-sm font-semibold">Mark all read</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      </SafeAreaView>
+    <View style={styles.root}>
+      <Stack.Screen options={{
+        headerShown: true,
+        title: 'Notifications',
+        headerBackVisible: false,
+        headerShadowVisible: false,
+        headerStyle: { backgroundColor: '#F8F9FA' },
+        headerTintColor: '#111827',
+        headerLeft: () => (
+          <TouchableOpacity onPress={() => router.back()} style={{ paddingLeft: 5 }}>
+            <ChevronLeft size={24} color="#111827" />
+          </TouchableOpacity>
+        ),
+        headerRight: () => unread.length > 0 ? (
+          <TouchableOpacity onPress={() => userId && markAllAsRead(userId)} activeOpacity={0.7}>
+            <Text style={styles.markAll}>Mark all read</Text>
+          </TouchableOpacity>
+        ) : null,
+      }} />
 
       <FlatList
         data={notifications}
@@ -86,3 +88,8 @@ export default function NotificationsScreen() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  root: { flex: 1, backgroundColor: '#F8F9FA' },
+  markAll: { color: '#004E98', fontSize: 14, fontWeight: '600' },
+});

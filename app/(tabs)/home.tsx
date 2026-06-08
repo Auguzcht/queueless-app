@@ -1,11 +1,14 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
+import { useFocusEffect } from 'expo-router';
 import { Dimensions, ScrollView, RefreshControl, View, TouchableOpacity, StyleSheet } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming, Easing as RNEasing } from 'react-native-reanimated';
 import { Text } from '@/components/ui/text';
 import { Icon } from '@/components/ui/icon';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { AnimatedMeshBackground } from '@/components/home/AnimatedMeshBackground';
+
 import { RecentActivity } from '@/components/home/RecentActivity';
+import { MeshCanvas } from '@/components/home/MeshCanvas';
+
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useQueueStore } from '@/stores/useQueueStore';
 import { Ticket, Bell, ArrowRight, Users } from 'lucide-react-native';
@@ -20,6 +23,7 @@ const TXT_SHADOW = {
 };
 
 export default function HomeScreen() {
+  const scrollRef = useRef<ScrollView>(null);
   const userId = useAuthStore((s) => s.session?.user?.id);
   const profile = useAuthStore((s) => s.profile);
   const { activeTickets, isLoading, fetchActiveTickets } = useQueueStore();
@@ -29,26 +33,31 @@ export default function HomeScreen() {
     if (userId) fetchActiveTickets(userId);
   }, [userId]);
 
+  // Reset scroll position on tab focus
+  useFocusEffect(
+    useCallback(() => {
+      scrollRef.current?.scrollTo({ y: 0, animated: false });
+    }, [])
+  );
+
   const waiting = activeTickets.filter((t) => t.status === 'waiting');
   const serving = activeTickets.filter((t) => t.status === 'serving');
   const completed = activeTickets.filter((t) => t.status === 'completed');
   const hasActive = waiting.length > 0 || serving.length > 0;
   const activeTicket = waiting[0] || serving[0];
-  const aheadCount = waiting.reduce((sum, t) => sum + (t.position ?? 0), 0);
+
   const ringSize = Math.min(Dimensions.get('window').width * 0.42, 180);
 
   return (
     <View style={styles.root}>
-      {/* 1. Absolute Background — extends 85% down, no cutoff */}
-      <View style={styles.bgWrapper}>
-        <AnimatedMeshBackground />
-      </View>
-
-      {/* 2. Scrollable Foreground */}
+      <MeshCanvas />
+      {/* Scrollable Foreground */}
       <ScrollView
+        ref={scrollRef}
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="always"
         refreshControl={
           <RefreshControl
             refreshing={isLoading}
@@ -121,7 +130,7 @@ export default function HomeScreen() {
                   {hasActive ? (
                     <View className="items-center px-2">
                       <Text className="text-white font-display font-extrabold tracking-tight"
-                        style={[{ fontSize: Math.min(ringSize * 0.2, 34) }, TXT_SHADOW]}>
+                        style={[{ fontSize: Math.min(ringSize * 0.2, 34), lineHeight: Math.min(ringSize * 0.28, 44), paddingTop: 2, includeFontPadding: false }, TXT_SHADOW]}>
                         {activeTicket.ticket_number}
                       </Text>
                       <Text className="text-white/60 font-semibold uppercase tracking-[1.5px] mt-0.5"
@@ -167,7 +176,7 @@ export default function HomeScreen() {
               <View className="flex-row items-center gap-2 bg-white/10 rounded-full px-4 py-2">
                 <Users size={14} color="rgba(255,255,255,0.7)" />
                 <Text className="text-white/80 text-sm font-medium" style={TXT_SHADOW}>
-                  {aheadCount} {aheadCount === 1 ? 'person' : 'people'} ahead
+                  Position {activeTicket.position}
                 </Text>
               </View>
               <TouchableOpacity onPress={() => router.push('/my-queue')} activeOpacity={0.8} className="flex-row items-center gap-1.5">
@@ -216,15 +225,7 @@ function getGreeting() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
-  },
-  bgWrapper: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: height * 0.85,
-    zIndex: 0,
+    backgroundColor: 'transparent',
   },
   scrollView: {
     flex: 1,

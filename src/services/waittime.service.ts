@@ -14,7 +14,6 @@ export interface WaitTimeEstimate {
 export const waittimeService = {
   async estimateWait(departmentId: string): Promise<WaitTimeEstimate> {
     const { data, error } = await supabase.functions.invoke('estimate-wait', {
-      method: 'GET',
       body: { department_id: departmentId },
     });
 

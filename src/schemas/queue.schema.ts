@@ -14,11 +14,11 @@ export const ticketStatusSchema = z.enum([
 ]);
 
 export const queueTicketSchema = z.object({
-  id: z.string().uuid(),
+  id: z.string(),
   ticket_number: z.string(),
-  department_id: z.string().uuid(),
-  user_id: z.string().uuid(),
-  counter_id: z.string().uuid().nullable(),
+  department_id: z.string(),
+  user_id: z.string(),
+  counter_id: z.string().nullable(),
   status: ticketStatusSchema,
   position: z.number(),
   joined_at: z.string(),
@@ -35,7 +35,7 @@ export const queueTicketSchema = z.object({
 export const liveQueueResponseSchema = z.array(queueTicketSchema);
 
 export const cancelTicketSchema = z.object({
-  ticketId: z.string().uuid(),
+  ticketId: z.string(),
 });
 
 export type JoinQueueInput = z.infer<typeof joinQueueSchema>;

@@ -17,6 +17,8 @@ export const registerSchema = z.object({
   userType: z.enum(['student', 'parent']).optional(),
   studentId: z.string().optional(),
   parentStudentId: z.string().optional(),
+  relationship: z.string().optional(),
+  suffix: z.string().optional(),
   educationLevel: z.string().optional(),
   yearLevel: z.string().optional(),
   collegeId: z.string().optional(),

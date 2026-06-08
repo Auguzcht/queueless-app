@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const departmentSchema = z.object({
-  id: z.string().uuid(),
+  id: z.string(),
   name: z.string(),
   code: z.string(),
   prefix: z.string().length(1),
@@ -19,16 +19,16 @@ export const departmentListSchema = z.object({
 });
 
 export const counterSchema = z.object({
-  id: z.string().uuid(),
-  department_id: z.string().uuid(),
+  id: z.string(),
+  department_id: z.string(),
   counter_number: z.number(),
   label: z.string().nullable(),
   is_active: z.boolean(),
 });
 
 export const departmentScheduleSchema = z.object({
-  id: z.string().uuid(),
-  department_id: z.string().uuid(),
+  id: z.string(),
+  department_id: z.string(),
   day_of_week: z.number().min(0).max(6),
   open_time: z.string(),
   close_time: z.string(),

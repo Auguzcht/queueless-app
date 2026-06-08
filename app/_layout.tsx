@@ -15,6 +15,8 @@ import { useAuthStore } from '@/stores/useAuthStore';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { PortalHost } from '@rn-primitives/portal';
 import { authService } from '@/services/auth.service';
+import { MeshProvider } from '@/lib/mesh-context';
+
 
 try { SplashScreen.preventAutoHideAsync(); } catch {}
 
@@ -46,17 +48,27 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
+      <MeshProvider>
       <StatusBar style={session ? 'light' : 'dark'} />
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" />
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="queue" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="settings" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="admin" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="notifications" options={{ presentation: 'modal', headerShown: true, title: 'Notifications' }} />
-      </Stack>
+      <View style={{ flex: 1, backgroundColor: 'transparent' }}>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: 'transparent' },
+          }}
+        >
+          <Stack.Screen name="index" />
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="(auth)" />
+          <Stack.Screen name="queue" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="settings" options={{ headerShown: false }} />
+          <Stack.Screen name="settings/*" options={{ headerShown: false }} />
+          <Stack.Screen name="admin" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="notifications" options={{ headerShown: false }} />
+        </Stack>
+      </View>
       <PortalHost />
+    </MeshProvider>
     </GestureHandlerRootView>
   );
 }

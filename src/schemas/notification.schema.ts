@@ -12,8 +12,8 @@ export const notificationTypeSchema = z.enum([
 ]);
 
 export const notificationSchema = z.object({
-  id: z.string().uuid(),
-  user_id: z.string().uuid(),
+  id: z.string(),
+  user_id: z.string(),
   type: notificationTypeSchema,
   title: z.string(),
   body: z.string(),

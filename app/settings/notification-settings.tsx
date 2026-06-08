@@ -1,41 +1,198 @@
-import { View, ScrollView, Switch } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useState } from 'react';
+import { View, ScrollView, Switch, TouchableOpacity, StyleSheet } from 'react-native';
+import { Stack, router } from 'expo-router';
 import { Text } from '@/components/ui/text';
-import { useSettingsStore } from '@/stores/useSettingsStore';
+import { Icon } from '@/components/ui/icon';
 import { Separator } from '@/components/ui/separator';
+import { ChevronLeft } from 'lucide-react-native';
 
-const TYPES = [
-  { key: 'queue_joined', label: 'Queue Joined', desc: 'When you join a queue' },
-  { key: 'your_turn', label: 'Your Turn', desc: 'When you are being served' },
-  { key: 'almost_your_turn', label: 'Almost Your Turn', desc: 'When you are next in line' },
-  { key: 'system_announcement', label: 'Announcements', desc: 'System-wide announcements' },
+const TOGGLES = [
+  {
+    key: 'all',
+    label: 'All Notifications',
+    desc: 'Master switch for all app notifications',
+    isMaster: true,
+  },
+  {
+    key: 'queue_updates',
+    label: 'Queue Updates',
+    desc: 'Get notified when your queue position changes',
+  },
+  {
+    key: 'your_turn',
+    label: 'Your Turn Alert',
+    desc: 'Alert when you are next in line to be served',
+  },
+  {
+    key: 'announcements',
+    label: 'Announcements',
+    desc: 'General announcements from your department',
+  },
+  {
+    key: 'reminders',
+    label: 'Reminders',
+    desc: 'Reminders about upcoming or active queue tickets',
+  },
+  {
+    key: 'tips',
+    label: 'Tips & Updates',
+    desc: 'App tips, feature updates, and news',
+  },
 ];
 
 export default function NotificationSettingsScreen() {
-  const { notificationsEnabled, setNotificationsEnabled } = useSettingsStore();
+  const [enabled, setEnabled] = useState(true);
+  const [toggles, setToggles] = useState<Record<string, boolean>>({
+    all: true,
+    queue_updates: true,
+    your_turn: true,
+    announcements: false,
+    reminders: true,
+    tips: false,
+  });
+
+  const toggle = (key: string) => {
+    if (key === 'all') {
+      const next = !toggles.all;
+      setToggles(Object.fromEntries(TOGGLES.map((t) => [t.key, next])));
+      setEnabled(next);
+    } else {
+      setToggles((prev) => ({ ...prev, [key]: !prev[key] }));
+    }
+  };
+
+  const masterOn = toggles.all;
 
   return (
-    <SafeAreaView className="flex-1 bg-secondary">
-      <ScrollView contentContainerClassName="p-6">
-        <Text variant="h2" className="text-foreground mb-6">Notification Settings</Text>
+    <View style={styles.root}>
+      <Stack.Screen options={{
+        headerShown: true,
+        title: 'Notifications',
+        headerLeft: () => (
+          <TouchableOpacity onPress={() => router.back()} style={{ paddingLeft: 5 }}>
+            <ChevronLeft size={24} color="#111827" />
+          </TouchableOpacity>
+        ),
+        headerShadowVisible: false,
+        headerStyle: { backgroundColor: '#F8F9FA' },
+        headerTintColor: '#111827',
+        headerBackTitleVisible: false,
+      }} />
 
-        <View className="flex-row justify-between items-center bg-card rounded-xl p-4 mb-4 shadow-sm border border-border">
-          <View><Text className="text-foreground font-medium">Push Notifications</Text><Text variant="small" className="text-muted-foreground">Master toggle for all notifications</Text></View>
-          <Switch value={notificationsEnabled} onValueChange={setNotificationsEnabled} trackColor={{ false: '#EBEBEB', true: '#3A6EA5' }} thumbColor={notificationsEnabled ? '#004E98' : '#9CA3AF'} />
-        </View>
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <Text style={styles.intro}>
+          Control which notifications QueueLess can send you. Turn off the master switch to silence everything at once.
+        </Text>
 
-        <View className="bg-card rounded-xl overflow-hidden shadow-sm border border-border">
-          {TYPES.map((t, i) => (
-            <View key={t.key} className={`flex-row justify-between items-center p-4 ${!notificationsEnabled ? 'opacity-50' : ''}`}>
-              <View className="flex-1 mr-4">
-                <Text className="text-foreground">{t.label}</Text>
-                <Text variant="small" className="text-muted-foreground">{t.desc}</Text>
+        <View style={styles.card}>
+          {TOGGLES.map((item, i) => (
+            <View key={item.key}>
+              <View style={[styles.row, item.isMaster && styles.masterRow]}>
+                <View style={styles.rowText}>
+                  <Text style={[styles.rowLabel, item.isMaster && styles.masterLabel]}>{item.label}</Text>
+                  <Text style={[styles.rowDesc, !masterOn && !item.isMaster && styles.disabled]}>{item.desc}</Text>
+                </View>
+                <Switch
+                  value={item.isMaster ? masterOn : (masterOn && toggles[item.key])}
+                  onValueChange={() => toggle(item.key)}
+                  disabled={!masterOn && !item.isMaster}
+                  trackColor={{ false: '#E5E7EB', true: '#004E98' }}
+                  thumbColor="#FFFFFF"
+                  style={styles.switch}
+                />
               </View>
-              <Switch value={notificationsEnabled} disabled={!notificationsEnabled} onValueChange={() => {}} trackColor={{ false: '#EBEBEB', true: '#3A6EA5' }} thumbColor="#004E98" />
+              {i < TOGGLES.length - 1 && <Separator style={styles.sep} />}
             </View>
           ))}
         </View>
+
+        <Text style={styles.systemNote}>
+          To completely disable all alerts, manage QueueLess permissions in your device's native system settings.
+        </Text>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: '#F8F9FA',
+  },
+  scrollContent: {
+    padding: 24,
+    paddingBottom: 40,
+  },
+  intro: {
+    fontSize: 14,
+    color: '#6B7280',
+    lineHeight: 20,
+    marginBottom: 20,
+    fontFamily: 'Inter-Regular',
+  },
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+  },
+  masterRow: {
+    backgroundColor: '#F9FAFB',
+  },
+  rowText: {
+    flex: 1,
+    marginRight: 12,
+  },
+  rowLabel: {
+    fontSize: 15,
+    color: '#111827',
+    fontFamily: 'Inter-Regular',
+  },
+  masterLabel: {
+    fontWeight: '600',
+    fontFamily: 'Inter-SemiBold',
+  },
+  rowDesc: {
+    fontSize: 13,
+    color: '#9CA3AF',
+    marginTop: 2,
+    lineHeight: 18,
+    fontFamily: 'Inter-Regular',
+  },
+  disabled: {
+    opacity: 0.5,
+  },
+  switch: {
+    transform: [{ scaleX: 0.85 }, { scaleY: 0.85 }],
+  },
+  sep: {
+    marginLeft: 16,
+  },
+  systemNote: {
+    fontSize: 13,
+    color: '#9CA3AF',
+    textAlign: 'center',
+    marginTop: 24,
+    lineHeight: 18,
+    fontFamily: 'Inter-Regular',
+  },
+  footer: {
+    textAlign: 'center',
+    color: '#9CA3AF',
+    fontSize: 12,
+    marginTop: 4,
+    fontFamily: 'Inter-Regular',
+  },
+});

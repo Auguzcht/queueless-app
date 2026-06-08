@@ -29,7 +29,7 @@ export const updateProfileSchema = z.object({
 });
 
 export const profileResponseSchema = z.object({
-  id: z.string().uuid(),
+  id: z.string(),
   first_name: z.string(),
   middle_name: z.string().nullable(),
   last_name: z.string(),

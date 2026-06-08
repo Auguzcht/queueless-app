@@ -26,8 +26,10 @@ export const authService = {
           middle_name: parsed.middleName ?? '',
           last_name: parsed.lastName,
           user_type: parsed.userType ?? 'student',
+          suffix: parsed.suffix ?? '',
           student_id: parsed.studentId ?? '',
           parent_student_id: parsed.parentStudentId ?? '',
+          relationship: parsed.relationship ?? '',
           education_level: parsed.educationLevel ?? '',
           year_level: parsed.yearLevel ?? '',
           college_id: parsed.collegeId ?? '',
@@ -43,6 +45,21 @@ export const authService = {
   async signOut() {
     const { error } = await supabase.auth.signOut();
     if (error) throw new AuthError(error.message);
+  },
+
+  async updatePassword(currentPassword: string, newPassword: string) {
+    // Re-authenticate with current password first
+    const user = (await supabase.auth.getUser()).data.user;
+    if (!user?.email) throw new AuthError('No authenticated user');
+
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: user.email,
+      password: currentPassword,
+    });
+    if (signInError) throw new AuthError('Current password is incorrect', 'INVALID_CREDENTIALS');
+
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) throw new AuthError(error.message, 'PASSWORD_UPDATE_FAILED');
   },
 
   async resetPassword(email: string) {

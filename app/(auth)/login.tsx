@@ -8,9 +8,10 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { FadeInUp } from '@/hooks/useAnimated';
-import { router } from 'expo-router';
-import { ArrowLeft, KeyRound, X } from 'lucide-react-native';
+import { Stack, router } from 'expo-router';
+import { ChevronLeft, X } from 'lucide-react-native';
 import { Icon } from '@/components/ui/icon';
+
 import { authService } from '@/services/auth.service';
 import { BottomSheet } from '@/components/ui/bottom-sheet';
 
@@ -30,21 +31,27 @@ export default function LoginScreen() {
 
   return (
     <View className="flex-1 bg-background">
+      <Stack.Screen options={{
+        headerShown: true,
+        title: 'Sign In',
+        headerShadowVisible: false,
+        headerStyle: { backgroundColor: '#FFFFFF' },
+        headerTintColor: '#111827',
+        headerLeft: () => (
+          <TouchableOpacity onPress={() => router.back()} style={{ paddingLeft: 5 }}>
+            <Icon as={ChevronLeft} size={24} color="#111827" />
+          </TouchableOpacity>
+        ),
+      }} />
       <LinearGradient colors={['#EEF2FF', '#E0E7FF', '#F8FAFC']} className="absolute inset-0" />
       <SafeAreaView className="flex-1">
-        <View className="flex-row items-center justify-between px-6 pt-2 pb-2">
-          <TouchableOpacity onPress={() => router.back()} className="p-2 -ml-2 z-10">
-            <Icon as={ArrowLeft} size={22} color="#1A1A2E" />
-          </TouchableOpacity>
-          <Image source={require('../../assets/QueueLess-Logo-Transparent.png')} className="w-9 h-9" resizeMode="contain" />
-          <View className="w-9" />
-        </View>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1">
           <ScrollView contentContainerClassName="flex-grow" keyboardShouldPersistTaps="handled">
-            <Animated.View entering={FadeInUp.duration(400).delay(100)} className="flex-1 px-6 justify-center pb-8">
-              <View className="bg-white/95 rounded-3xl p-6 shadow-sm border border-indigo-100/50">
-                <Text variant="h2" className="text-foreground font-display mb-1">Welcome back</Text>
-                <Text className="text-muted-foreground text-sm mb-6 font-body">Sign in to your account</Text>
+            <Animated.View entering={FadeInUp.duration(400).delay(100)} className="flex-1 px-6 justify-center items-center" style={{ marginTop: -100 }}>
+              <Image source={require('../../assets/QueueLess-Logo-Transparent.png')} className="w-14 h-14 mb-4" resizeMode="contain" />
+              <View className="bg-white/95 rounded-3xl p-6 shadow-sm border border-indigo-100/50 w-full">
+                <Text variant="h2" className="text-foreground font-display mb-1 text-center">Welcome back</Text>
+                <Text className="text-muted-foreground text-sm mb-6 font-body text-center">Sign in to your account</Text>
                 <LoginForm onSuccess={() => router.replace('/(tabs)/home')} onForgotPress={() => setShowForgotSheet(true)} />
               </View>
             </Animated.View>

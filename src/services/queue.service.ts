@@ -8,7 +8,20 @@ export const queueService = {
       body: { department_id: departmentId },
     });
 
-    if (error) throw new QueueError(error.message, 'JOIN_FAILED');
+    if (error) {
+      // Try to extract the response body
+      let detail = error.message;
+      try {
+        const ctx = (error as any)?.context;
+        if (ctx?.body) {
+          const text = await ctx.body.text();
+          const json = JSON.parse(text);
+          detail = json.error || text;
+        }
+      } catch {}
+      console.error('Edge function error detail:', detail);
+      throw new QueueError(detail, 'JOIN_FAILED');
+    }
     const parsed = queueTicketSchema.parse(data);
     return parsed;
   },
@@ -91,6 +104,22 @@ export const queueService = {
           schema: 'public',
           table: 'queue_tickets',
           filter: `department_id=eq.${departmentId}`,
+        },
+        callback,
+      )
+      .subscribe();
+  },
+
+  subscribeToMyTickets(userId: string, callback: (payload: any) => void) {
+    return supabase
+      .channel(`my-tickets-${userId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'queue_tickets',
+          filter: `user_id=eq.${userId}`,
         },
         callback,
       )

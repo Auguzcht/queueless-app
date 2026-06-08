@@ -1,4 +1,5 @@
 import { Badge } from '@/components/ui/badge';
+import { Text } from '@/components/ui/text';
 import type { TicketStatus } from '@/schemas/queue.schema';
 
 const MAP: Record<string, 'default' | 'secondary' | 'outline' | 'destructive'> = {
@@ -10,5 +11,9 @@ const LABEL: Record<string, string> = {
 };
 
 export function QueueStatusBadge({ status }: { status: TicketStatus }) {
-  return <Badge variant={MAP[status] ?? 'secondary'}>{LABEL[status] ?? status}</Badge>;
+  return (
+    <Badge variant={MAP[status] ?? 'secondary'}>
+      <Text>{LABEL[status] ?? status}</Text>
+    </Badge>
+  );
 }
