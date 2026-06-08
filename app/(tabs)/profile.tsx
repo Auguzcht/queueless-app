@@ -46,7 +46,7 @@ export default function ProfileScreen() {
           ))}
         </View>
 
-        <TouchableOpacity onPress={async () => { await signOut(); router.replace('/(auth)/login'); }} className="flex-row items-center justify-center mt-6 py-4">
+        <TouchableOpacity onPress={async () => { await signOut(); }} className="flex-row items-center justify-center mt-6 py-4">
           <Icon as={LogOut} size={18} color="#EF4444" />
           <Text className="text-destructive font-medium ml-2">Sign Out</Text>
         </TouchableOpacity>

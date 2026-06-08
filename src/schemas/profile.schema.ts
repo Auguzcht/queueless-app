@@ -16,6 +16,11 @@ export const updateProfileSchema = z.object({
     .min(1, 'Last name is required')
     .max(100)
     .optional(),
+  suffix: z
+    .string()
+    .max(10)
+    .optional()
+    .or(z.literal('')),
   phone: z
     .string()
     .regex(/^\+?[\d\s-()]{7,15}$/, 'Invalid phone number')
@@ -28,6 +33,7 @@ export const profileResponseSchema = z.object({
   first_name: z.string(),
   middle_name: z.string().nullable(),
   last_name: z.string(),
+  suffix: z.string().nullable(),
   phone: z.string().nullable(),
   avatar_url: z.string().nullable(),
   role: z.enum(['student', 'parent', 'staff', 'admin']),

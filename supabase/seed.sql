@@ -316,11 +316,18 @@ VALUES (
 )
 ON CONFLICT (provider, provider_id) DO NOTHING;
 
--- Set student-specific fields that the trigger doesn't handle
-UPDATE profiles
-SET student_id = '2021120266'
-WHERE id = 'b2000000-0000-0000-0000-000000000002'
-  AND student_id IS NULL;
+-- Create student_profiles entry for Joshua
+-- (trigger fn_handle_new_user only runs on INSERT to auth.users,
+--  seeded users are inserted directly and bypass the trigger)
+-- Note: student_id unique constraint — skips silently if taken
+INSERT INTO student_profiles (profile_id, student_id, education_level, year_level)
+VALUES (
+  'b2000000-0000-0000-0000-000000000002',
+  '2021120266',
+  'college',
+  'first_year'
+)
+ON CONFLICT (student_id) DO NOTHING;
 
 
 -- ============================================================

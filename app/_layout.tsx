@@ -9,14 +9,17 @@ import {
   PlusJakartaSans_600SemiBold,
 } from '@expo-google-fonts/plus-jakarta-sans';
 import * as SplashScreen from 'expo-splash-screen';
+import { View, ActivityIndicator } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuthStore } from '@/stores/useAuthStore';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { PortalHost } from '@rn-primitives/portal';
+import { authService } from '@/services/auth.service';
 
-SplashScreen.preventAutoHideAsync();
+try { SplashScreen.preventAutoHideAsync(); } catch {}
 
 export default function RootLayout() {
-  const [fontsLoaded, fontError] = useFonts({
+  useFonts({
     'Inter-Regular': Inter_400Regular,
     'Inter-Medium': Inter_500Medium,
     'Inter-SemiBold': Inter_600SemiBold,
@@ -25,25 +28,28 @@ export default function RootLayout() {
     'PlusJakartaSans-Bold': PlusJakartaSans_700Bold,
     'PlusJakartaSans-SemiBold': PlusJakartaSans_600SemiBold,
   });
+  usePushNotifications();
 
-  const { session, isLoading } = useAuth();
+  const session = useAuthStore((s) => s.session);
 
   useEffect(() => {
-    if (fontsLoaded || fontError) {
-      SplashScreen.hideAsync();
-    }
-  }, [fontsLoaded, fontError]);
+    authService.getSession()
+      .then((s) => useAuthStore.getState().setSession(s))
+      .catch(() => useAuthStore.getState().setSession(null));
+    const { data: listener } = authService.onAuthStateChange((s) => {
+      useAuthStore.getState().setSession(s);
+    });
+    return () => listener?.subscription.unsubscribe();
+  }, []);
 
-  if (!fontsLoaded && !fontError) return null;
+  useEffect(() => { try { SplashScreen.hideAsync(); } catch {} }, []);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <StatusBar style={session ? 'light' : 'dark'} />
       <Stack screenOptions={{ headerShown: false }}>
-        {session ? (
-          <Stack.Screen name="(tabs)" />
-        ) : null}
         <Stack.Screen name="index" />
+        <Stack.Screen name="(tabs)" />
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="queue" options={{ presentation: 'modal' }} />
         <Stack.Screen name="settings" options={{ presentation: 'modal' }} />

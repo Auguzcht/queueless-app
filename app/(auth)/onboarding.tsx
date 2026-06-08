@@ -1,12 +1,16 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { View, ScrollView, KeyboardAvoidingView, Platform, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { Confetti } from '@/components/ui/confetti';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeIn, useAnimatedStyle, useSharedValue, withTiming, Easing } from 'react-native-reanimated';
 import { Text } from '@/components/ui/text';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { authService } from '@/services/auth.service';
 import { supabase } from '@/lib/supabase';
+
+
 import { router } from 'expo-router';
 import { ChevronRight, CheckCircle2, GraduationCap, Users, School, BookOpen, Eye, EyeOff } from 'lucide-react-native';
 import { Icon } from '@/components/ui/icon';
@@ -19,9 +23,10 @@ type YearLvl = 'grade_7' | 'grade_8' | 'grade_9' | 'grade_10' | 'grade_11' | 'gr
 interface OnboardingData {
   userType: UserType | null;
   firstName: string; middleName: string; lastName: string;
-  email: string; studentId: string;
+  email: string; phone: string; studentId: string;
   educationLevel: EduLevel | null; yearLevel: YearLvl | null;
   collegeId: string | null; programId: string | null;
+  parentStudentId: string;  // for linking a child
   password: string; confirmPassword: string;
 }
 
@@ -94,6 +99,7 @@ function getParentSteps() {
     { title: 'Who are you?', desc: 'Select your account type' },
     { title: 'Your Name', desc: 'Tell us who you are' },
     { title: 'Contact Info', desc: 'Your email and phone number' },
+    { title: 'Link Student', desc: 'Connect to your child\'s account' },
     { title: 'Secure Account', desc: 'Create your password' },
   ];
 }
@@ -103,7 +109,7 @@ export default function OnboardingScreen() {
   const [step, setStep] = useState(0);
   const [data, setData] = useState<OnboardingData>({
     userType: null, firstName: '', middleName: '', lastName: '',
-    email: '', studentId: '',
+    email: '', phone: '', studentId: '', parentStudentId: '',
     educationLevel: null, yearLevel: null, collegeId: null, programId: null,
     password: '', confirmPassword: '',
   });
@@ -115,13 +121,25 @@ export default function OnboardingScreen() {
     if (success) {
       successTimer.current = setTimeout(() => {
         router.replace('/(tabs)/home');
-      }, 2000);
+      }, 3500);
     }
     return () => { if (successTimer.current) clearTimeout(successTimer.current); };
   }, [success]);
   const [showPw, setShowPw] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [studentLookup, setStudentLookup] = useState<'idle' | 'found' | 'not_found'>('idle');
   const { signUp } = useAuthStore();
+
+  const lookupTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const handleStudentLookup = (id: string) => {
+    update('parentStudentId', id);
+    if (lookupTimer.current) clearTimeout(lookupTimer.current);
+    if (id.length !== 10) { setStudentLookup('idle'); return; }
+    lookupTimer.current = setTimeout(async () => {
+      const { data } = await supabase.rpc('fn_find_student_by_id', { p_student_id: id }).maybeSingle();
+      setStudentLookup(data ? 'found' : 'not_found');
+    }, 500);
+  };
   const progressWidth = useSharedValue(25);
 
   const steps = userType === 'student' ? getStudentSteps() : getParentSteps();
@@ -146,7 +164,8 @@ export default function OnboardingScreen() {
       if (step === 4) return data.password.length >= 8 && data.password === data.confirmPassword;
     } else {
       if (step === 2) return data.email.includes('@');
-      if (step === 3) return data.password.length >= 8 && data.password === data.confirmPassword;
+      if (step === 3) return true;  // linking is optional
+      if (step === 4) return data.password.length >= 8 && data.password === data.confirmPassword;
     }
     return false;
   };
@@ -160,26 +179,21 @@ export default function OnboardingScreen() {
     setSubmitting(true);
     await new Promise((r) => setTimeout(r, 1200));
     try {
+      // Pass all data via metadata — the trigger creates profile + student_profiles atomically
       await signUp({
         firstName: data.firstName, middleName: data.middleName, lastName: data.lastName,
         email: data.email, password: data.password, confirmPassword: data.password,
+        userType: data.userType ?? undefined,
+        studentId: data.studentId,
+        parentStudentId: data.parentStudentId || undefined,
+        educationLevel: data.educationLevel ?? undefined,
+        yearLevel: data.yearLevel ?? undefined,
+        collegeId: data.educationLevel === 'college' ? (data.collegeId ?? undefined) : undefined,
+        programId: data.educationLevel === 'college' ? (data.programId ?? undefined) : undefined,
       });
 
-      // Insert into student_profiles if user is a student
-      if (data.userType === 'student') {
-        const { data: sessionData } = await supabase.auth.getSession();
-        const userId = sessionData?.session?.user?.id;
-        if (userId) {
-          await supabase.from('student_profiles').insert({
-            profile_id: userId,
-            student_id: data.studentId,
-            education_level: data.educationLevel,
-            year_level: data.yearLevel,
-            college_id: data.educationLevel === 'college' ? data.collegeId : null,
-            program_id: data.educationLevel === 'college' ? data.programId : null,
-          });
-        }
-      }
+      // Sign in to get a session (trigger auto-confirms but response doesn't include session)
+      await authService.signInWithEmail({ email: data.email, password: data.password });
 
       setSuccess(true);
     } catch (err) {
@@ -194,22 +208,20 @@ export default function OnboardingScreen() {
     goToStep(1);
   };
 
-  if (success) {
-    return (
-      <SafeAreaView className="flex-1 bg-background items-center justify-center px-8">
-        <Animated.View entering={FadeIn} className="items-center gap-4">
-          <View className="w-20 h-20 rounded-full bg-success/10 items-center justify-center">
-            <Icon as={CheckCircle2} size={40} color="#22C55E" />
-          </View>
-          <Text variant="h2" className="text-foreground text-center">Registration Complete!</Text>
-          <Text variant="p" className="text-center">Welcome to QueueLess. You'll be redirected shortly.</Text>
-        </Animated.View>
-      </SafeAreaView>
-    );
-  }
-
   return (
     <SafeAreaView className="flex-1 bg-background">
+      {success ? (
+        <View className="flex-1 items-center justify-center px-8">
+          <Animated.View entering={FadeIn} className="items-center gap-4">
+            <Confetti />
+            <View className="w-20 h-20 rounded-full bg-success/10 items-center justify-center mb-4">
+              <Icon as={CheckCircle2} size={40} color="#22C55E" />
+            </View>
+            <Text variant="h2" className="text-foreground text-center">Registration Complete!</Text>
+            <Text variant="p" className="text-center">Welcome to QueueLess. You'll be redirected shortly.</Text>
+          </Animated.View>
+        </View>
+      ) : (
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1">
         {/* Progress */}
         <View className="mx-6 h-1.5 bg-muted rounded-full overflow-hidden mt-4 mb-6">
@@ -263,10 +275,28 @@ export default function OnboardingScreen() {
               <View className="gap-4">
                 <Input placeholder="your@mcm.edu.ph" keyboardType="email-address" autoCapitalize="none" value={data.email} onChangeText={(v) => update('email', v)} />
                 <Input placeholder="Student ID (e.g. 2021120266)" keyboardType="number-pad" maxLength={10} value={data.studentId} onChangeText={(v) => update('studentId', v.replace(/[^0-9]/g, ''))} />
+                <View className="flex-row gap-3">
+                  <View className="w-20 justify-center items-center bg-muted rounded-2xl">
+                    <Text className="text-foreground font-medium">🇵🇭 +63</Text>
+                  </View>
+                  <View className="flex-1">
+                    <Input placeholder="Phone (optional)" keyboardType="number-pad" maxLength={10} value={data.phone} onChangeText={(v) => { const n = v.replace(/[^0-9]/g, ''); update('phone', n.startsWith('9') ? n : '9' + n); }} />
+                  </View>
+                </View>
               </View>
             )}
             {step === 2 && userType === 'parent' && (
-              <Input placeholder="your@email.com" keyboardType="email-address" autoCapitalize="none" value={data.email} onChangeText={(v) => update('email', v)} />
+              <View className="gap-4">
+                <Input placeholder="your@email.com" keyboardType="email-address" autoCapitalize="none" value={data.email} onChangeText={(v) => update('email', v)} />
+                <View className="flex-row gap-3">
+                  <View className="w-24 justify-center items-center bg-muted rounded-2xl">
+                    <Text className="text-foreground font-medium">🇵🇭 +63</Text>
+                  </View>
+                  <View className="flex-1">
+                    <Input placeholder="Phone (optional)" keyboardType="number-pad" maxLength={10} value={data.phone} onChangeText={(v) => { const n = v.replace(/[^0-9]/g, ''); update('phone', n.startsWith('9') ? n : '9' + n); }} />
+                  </View>
+                </View>
+              </View>
             )}
 
             {/* Step 3 — Student: Education Level + College/Program */}
@@ -325,7 +355,31 @@ export default function OnboardingScreen() {
             )}
 
             {/* Step 4/3 — Password (shared) */}
-            {((userType === 'student' && step === 4) || (userType === 'parent' && step === 3)) && (
+            {/* Step 3 — Parent: Link Student (optional) */}
+            {step === 3 && userType === 'parent' && (
+              <View className="gap-4">
+                <Text className="text-foreground font-semibold text-base">Link to your child</Text>
+                <Text variant="small" className="text-muted-foreground -mt-3">Enter your child's student ID to connect accounts. You can skip this and link later.</Text>
+                <View className="relative">
+                  <Input placeholder="Student ID (e.g. 2021120266)" keyboardType="number-pad" maxLength={10}
+                    value={data.parentStudentId}
+                    onChangeText={handleStudentLookup} />
+                  {data.parentStudentId.length === 10 && (
+                    <View className="absolute right-4 top-1/2 -translate-y-1/2">
+                      {studentLookup === 'found' ? (
+                        <Icon as={CheckCircle2} size={22} color="#22C55E" />
+                      ) : studentLookup === 'not_found' ? (
+                        <Text className="text-destructive font-bold text-lg">✕</Text>
+                      ) : null}
+                    </View>
+                  )}
+                </View>
+                {studentLookup === 'found' && <Text variant="small" className="text-success">Student found ✓</Text>}
+                {studentLookup === 'not_found' && <Text variant="small" className="text-destructive">No student found with that ID</Text>}
+              </View>
+            )}
+
+            {((userType === 'student' && step === 4) || (userType === 'parent' && step === 4)) && (
               <View className="gap-4">
                 {/* Password field */}
                 <View className="relative">
@@ -369,6 +423,7 @@ export default function OnboardingScreen() {
           )}
         </View>
       </KeyboardAvoidingView>
+      )}
     </SafeAreaView>
   );
 }

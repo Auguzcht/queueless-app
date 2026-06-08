@@ -105,9 +105,9 @@ CREATE INDEX idx_guardians_student ON student_guardians (student_id);
 
 -- ============================================================
 -- UPDATED TRIGGER: fn_handle_new_user
--- Now accepts user_type in metadata to set role.
--- student_id, college, program are handled by student_profiles
--- which is created via a separate API call after onboarding.
+-- Creates profiles row on auth.users INSERT.
+-- If user_type = 'student' and student_id provided,
+-- also creates student_profiles record atomically.
 -- ============================================================
 CREATE OR REPLACE FUNCTION fn_handle_new_user()
 RETURNS TRIGGER
@@ -117,29 +117,30 @@ SET search_path = 'public'
 AS $$
 DECLARE
   v_first  TEXT;
-  v_middle TEXT;
   v_last   TEXT;
   v_role   user_role := 'student';
+  v_student_id TEXT;
 BEGIN
-  v_first  := NULLIF(TRIM(NEW.raw_user_meta_data ->> 'first_name'), '');
-  v_middle := NULLIF(TRIM(NEW.raw_user_meta_data ->> 'middle_name'), '');
-  v_last   := NULLIF(TRIM(NEW.raw_user_meta_data ->> 'last_name'), '');
-  IF v_first IS NULL THEN
-    v_first := INITCAP(split_part(split_part(NEW.email, '@', 1), '.', 1));
-  END IF;
-  IF v_last IS NULL THEN
-    v_last := NULLIF(INITCAP(split_part(split_part(NEW.email, '@', 1), '.', 2)), '');
-    IF v_last IS NULL THEN v_last := '—'; END IF;
-  END IF;
-  -- Set role from metadata (student or parent) default to student
+  v_first  := COALESCE(NULLIF(TRIM(NEW.raw_user_meta_data ->> 'first_name'), ''), split_part(NEW.email, '@', 1));
+  v_last   := COALESCE(NULLIF(TRIM(NEW.raw_user_meta_data ->> 'last_name'), ''), '—');
   BEGIN
     v_role := COALESCE((NEW.raw_user_meta_data ->> 'role')::user_role, 'student');
-  EXCEPTION WHEN OTHERS THEN
-    v_role := 'student';
-  END;
-  INSERT INTO profiles (id, first_name, middle_name, last_name, role)
-  VALUES (NEW.id, v_first, v_middle, v_last, v_role)
-  ON CONFLICT (id) DO UPDATE SET first_name = EXCLUDED.first_name, last_name = EXCLUDED.last_name;
+  EXCEPTION WHEN OTHERS THEN v_role := 'student'; END;
+
+  INSERT INTO profiles (id, first_name, last_name, role)
+  VALUES (NEW.id, v_first, v_last, v_role)
+  ON CONFLICT (id) DO UPDATE SET first_name = EXCLUDED.first_name;
+
+  -- Student profile (created atomically)
+  IF NEW.raw_user_meta_data ->> 'user_type' = 'student' THEN
+    v_student_id := NULLIF(TRIM(NEW.raw_user_meta_data ->> 'student_id'), '');
+    IF v_student_id IS NOT NULL THEN
+      INSERT INTO student_profiles (profile_id, student_id, education_level, year_level)
+      VALUES (NEW.id, v_student_id, 'college', 'first_year')
+      ON CONFLICT (profile_id) DO UPDATE SET student_id = EXCLUDED.student_id;
+    END IF;
+  END IF;
+
   RETURN NEW;
 END;
 $$;
