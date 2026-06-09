@@ -70,6 +70,7 @@
     "lucide-react-native": "^1.17.0",
     "nativewind": "4.2.5",
     "react": "19.1.0",
+    "react-dom": "19.1.0",
     "react-hook-form": "^7.77.0",
     "react-native": "0.81.5",
     "react-native-fast-confetti": "^2.0.0",
@@ -95,5 +96,9 @@
     "typescript": "~5.9.2"
   },
   "main": "expo-router/entry",
-  "private": true
+  "private": true,
+  "overrides": {
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
+  }
 }
