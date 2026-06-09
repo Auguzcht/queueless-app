@@ -8,6 +8,7 @@
     "icon": "./assets/QueueLess-1024x1024.png",
     "userInterfaceStyle": "light",
     "splash": {
+      "image": "./assets/QueueLess-1024x1024.png",
       "backgroundColor": "#004E98",
       "resizeMode": "contain"
     },
