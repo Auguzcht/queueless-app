@@ -15,6 +15,8 @@ interface AuthState {
   guardianInfo: GuardianInfo | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  selectedDeptId: string | null;
+  selectedCounterId: string | null;
 
   signIn: (input: LoginInput) => Promise<void>;
   signUp: (input: RegisterInput) => Promise<void>;
@@ -23,6 +25,7 @@ interface AuthState {
   fetchProfile: () => Promise<void>;
   updateProfile: (data: any) => Promise<void>;
   refreshExtendedProfile: () => Promise<void>;
+  setStaffSelections: (deptId: string | null, counterId: string | null) => void;
   reset: () => void;
 }
 
@@ -35,6 +38,8 @@ export const useAuthStore = create<AuthState>()(
       guardianInfo: null,
       isLoading: true,
       isAuthenticated: false,
+      selectedDeptId: null,
+      selectedCounterId: null,
 
       signIn: async (input) => {
         const data = await authService.signInWithEmail(input);
@@ -103,8 +108,10 @@ export const useAuthStore = create<AuthState>()(
         await get().fetchProfile();
       },
 
+      setStaffSelections: (deptId, counterId) => set({ selectedDeptId: deptId, selectedCounterId: counterId }),
+
       reset: () => {
-        set({ session: null, profile: null, studentProfile: null, guardianInfo: null, isLoading: false, isAuthenticated: false });
+        set({ session: null, profile: null, studentProfile: null, guardianInfo: null, isLoading: false, isAuthenticated: false, selectedDeptId: null, selectedCounterId: null });
       },
     }),
     {

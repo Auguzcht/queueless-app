@@ -46,7 +46,7 @@ export default function MyQueueScreen() {
     return unsub;
   }, [userId]);
 
-  const tickets = activeTickets.filter((t) => t.status === 'waiting' || t.status === 'serving');
+  const tickets = activeTickets.filter((t) => t.status === 'waiting' || t.status === 'serving' || t.status === 'completed');
 
   return (
     <View style={styles.root}>
@@ -100,7 +100,7 @@ export default function MyQueueScreen() {
                   </View>
 
                   {/* Progress */}
-                  <QueueProgressTracker currentStep={ticket.status === 'serving' ? 'called' : 'in_line'} />
+                  <QueueProgressTracker currentStep={ticket.status === 'completed' ? 'completed' : ticket.status === 'serving' ? 'called' : 'in_line'} />
 
                   {/* Cancel */}
                   {ticket.status === 'waiting' && (

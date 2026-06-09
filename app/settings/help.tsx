@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { View, ScrollView, TouchableOpacity, StyleSheet, Linking, Image } from 'react-native';
-import Animated, { FadeIn, FadeOut, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import { Stack, router } from 'expo-router';
 import { Text } from '@/components/ui/text';
 import { Icon } from '@/components/ui/icon';
@@ -15,6 +15,12 @@ function FAQItem({ faq, isOpen, onToggle }: { faq: typeof FAQS[0]; isOpen: boole
     transform: [{ rotate: withSpring(isOpen ? '180deg' : '0deg', SPRING_CONFIG) }],
   }));
 
+  const answerStyle = useAnimatedStyle(() => ({
+    opacity: withTiming(isOpen ? 1 : 0, { duration: 400 }),
+    maxHeight: withTiming(isOpen ? 200 : 0, { duration: 400 }),
+    overflow: 'hidden',
+  }));
+
   return (
     <TouchableOpacity onPress={onToggle} activeOpacity={0.7} style={styles.faqItem}>
       <View style={styles.faqHeader}>
@@ -23,11 +29,9 @@ function FAQItem({ faq, isOpen, onToggle }: { faq: typeof FAQS[0]; isOpen: boole
           <Icon as={ChevronDown} size={18} color="#9CA3AF" />
         </Animated.View>
       </View>
-      {isOpen && (
-        <Animated.View entering={FadeIn.duration(300)} exiting={FadeOut.duration(200)}>
-          <Text style={styles.faqA}>{faq.a}</Text>
-        </Animated.View>
-      )}
+      <Animated.View style={[{ overflow: 'hidden' }, answerStyle]}>
+        <Text style={styles.faqA}>{faq.a}</Text>
+      </Animated.View>
     </TouchableOpacity>
   );
 }

@@ -64,11 +64,11 @@ export const notificationService = {
   },
 
   async getUnreadCount(userId: string): Promise<number> {
-    const { count, error } = await (supabase
+    const { count, error } = await supabase
       .from('notifications')
-      .select() as any)
+      .select('*', { count: 'exact', head: true })
       .eq('user_id', userId)
-      .eq('is_read', false);
+      .eq('is_read', false) as any;
 
     if (error) throw new AppError(error.message, 'UNREAD_COUNT_ERROR');
     return (count as number) ?? 0;

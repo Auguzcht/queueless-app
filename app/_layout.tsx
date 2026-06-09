@@ -18,6 +18,7 @@ import { PortalHost } from '@rn-primitives/portal';
 import { authService } from '@/services/auth.service';
 import { MeshProvider } from '@/lib/mesh-context';
 import { useNotificationStore } from '@/stores/useNotificationStore';
+import { notificationService } from '@/services/notification.service';
 
 
 try { SplashScreen.preventAutoHideAsync(); } catch {}
@@ -58,6 +59,11 @@ export default function RootLayout() {
   useEffect(() => {
     const user = useAuthStore.getState().profile;
     if (!user?.id) return;
+    // Fetch initial unread count
+    notificationService.getUnreadCount(user.id).then((c) => {
+      useNotificationStore.getState().setUnreadCount(c);
+    }).catch(() => {});
+    // Subscribe to real-time updates
     const unsub = useNotificationStore.getState().subscribeToNotifications(user.id);
     return unsub;
   }, [useAuthStore((s) => s.profile?.id)]);

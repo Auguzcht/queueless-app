@@ -44,7 +44,7 @@ export const queueService = {
       .select() as any)
       .eq('user_id', userId)
       .eq('date', today)
-      .in('status', ['waiting', 'serving'])
+      .in('status', ['waiting', 'serving', 'completed'])
       .order('joined_at', { ascending: false });
 
     if (error) throw new QueueError(error.message);

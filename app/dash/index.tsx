@@ -9,16 +9,17 @@ import { useAuthStore } from '@/stores/useAuthStore';
 import { useDepartmentStore } from '@/stores/useDepartmentStore';
 import { useNotificationStore } from '@/stores/useNotificationStore';
 import { supabase } from '@/lib/supabase';
-import { ChevronDown, SkipForward, Users, Clock, XCircle, LogOut, Bell } from 'lucide-react-native';
+import { ChevronDown, SkipForward, Users, Clock, XCircle, LogOut, CheckCircle2 } from 'lucide-react-native';
 
 export default function AdminDashboard() {
   const { departments, fetchDepartments } = useDepartmentStore();
   const signOut = useAuthStore((s) => s.signOut);
+  const { selectedDeptId: savedDept, selectedCounterId: savedCounter, setStaffSelections } = useAuthStore();
   const unreadCount = useNotificationStore((s) => s.unreadCount);
-  const [selectedDept, setSelectedDept] = useState<string | null>(null);
+  const [selectedDept, setSelectedDept] = useState<string | null>(savedDept);
+  const [selectedCounter, setSelectedCounter] = useState<string | null>(savedCounter);
   const [board, setBoard] = useState<any[]>([]);
   const [counters, setCounters] = useState<any[]>([]);
-  const [selectedCounter, setSelectedCounter] = useState<string | null>(null);
   const [advancing, setAdvancing] = useState(false);
   const [showDeptPicker, setShowDeptPicker] = useState(false);
   const chevronRotate = useSharedValue(0);
@@ -33,7 +34,7 @@ export default function AdminDashboard() {
 
   // Auto-select first department
   useEffect(() => {
-    if (departments.length > 0 && !selectedDept) setSelectedDept(departments[0].id);
+    if (departments.length > 0 && !selectedDept) { setSelectedDept(departments[0].id); setStaffSelections(departments[0].id, null); }
   }, [departments]);
 
   const fetchBoard = useCallback(async () => {
@@ -52,6 +53,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     if (!selectedDept) return;
+    setSelectedCounter(null);
     supabase.from('counters').select('*').eq('department_id', selectedDept).eq('is_active', true).then(({ data }) => {
       if (data) { setCounters(data); }
     });
@@ -124,19 +126,9 @@ export default function AdminDashboard() {
       <Stack.Screen options={{
         title: dept ? `${dept.name}` : 'Staff Dashboard',
         headerRight: () => (
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-            <TouchableOpacity onPress={() => router.push('/notifications')}>
-              <Icon as={Bell} size={20} color="#6B7280" />
-              {unreadCount > 0 && (
-                <View style={{ position: 'absolute', top: -4, right: -4, minWidth: 16, height: 16, borderRadius: 8, backgroundColor: '#EF4444', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 3 }}>
-                  <Text style={{ fontSize: 9, fontWeight: '700', color: '#FFFFFF', fontFamily: 'Inter-Bold' }}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
-                </View>
-              )}
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => Alert.alert('Sign Out', 'Are you sure you want to sign out?', [{ text: 'Cancel', style: 'cancel' }, { text: 'Sign Out', style: 'destructive', onPress: () => signOut() }])} style={{ paddingLeft: 4 }}>
-              <Icon as={LogOut} size={20} color="#EF4444" />
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity onPress={() => Alert.alert('Sign Out', 'Are you sure you want to sign out?', [{ text: 'Cancel', style: 'cancel' }, { text: 'Sign Out', style: 'destructive', onPress: () => signOut() }])} style={{ paddingLeft: 9 }}>
+            <Icon as={LogOut} size={20} color="#EF4444" />
+          </TouchableOpacity>
         ),
       }} />
 
@@ -156,7 +148,7 @@ export default function AdminDashboard() {
             {departments.map((d) => (
               <TouchableOpacity
                 key={d.id}
-                onPress={() => { setSelectedDept(d.id); setShowDeptPicker(false); }}
+                onPress={() => { setSelectedDept(d.id); setSelectedCounter(null); setStaffSelections(d.id, null); setShowDeptPicker(false); }}
                 style={[styles.deptOption, selectedDept === d.id && { backgroundColor: '#EEF2FF' }]}
               >
                 <Text style={{ fontSize: 15, color: selectedDept === d.id ? '#004E98' : '#111827', fontWeight: selectedDept === d.id ? '600' : '400' }}>
@@ -212,7 +204,7 @@ export default function AdminDashboard() {
           {counters.map((c) => (
             <TouchableOpacity
               key={c.id}
-              onPress={() => setSelectedCounter(c.id)}
+              onPress={() => { setSelectedCounter(c.id); setStaffSelections(selectedDept, c.id); }}
               onLongPress={() => removeCounter(c.id, c.counter_number)}
               style={[styles.counterChip, selectedCounter === c.id && styles.counterChipActive]}
             >
@@ -231,6 +223,31 @@ export default function AdminDashboard() {
 
         {/* Action Buttons */}
         <View style={{ flexDirection: 'row', gap: 12, marginBottom: 20 }}>
+          {serving && waiting.length === 0 ? (
+            <TouchableOpacity onPress={async () => {
+              if (!serving || advancing) return;
+              setAdvancing(true);
+              try {
+                const { error: fe } = await supabase.functions.invoke('advance-queue', {
+                  body: { department_id: selectedDept, counter_id: selectedCounter, complete_only: true },
+                });
+                if (fe) console.error('Complete failed:', fe.message);
+                else {
+                  setBoard((prev) => prev.filter((t) => t.id !== serving.id));
+                }
+              } catch (err: any) { console.error('Complete failed:', err.message); }
+              setAdvancing(false);
+            }} disabled={advancing} style={[styles.callBtn, advancing && { opacity: 0.5 }]}>
+              {advancing ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <>
+                  <Icon as={CheckCircle2} size={22} color="#FFFFFF" />
+                  <Text style={{ color: '#FFFFFF', fontWeight: '700', fontSize: 16, fontFamily: 'Inter-SemiBold' }}>Mark Complete</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          ) : (
           <TouchableOpacity onPress={handleAdvance} disabled={advancing || !selectedCounter || waiting.length === 0} style={[styles.callBtn, (advancing || !selectedCounter || waiting.length === 0) && { opacity: 0.5 }]}>
             {advancing ? (
               <ActivityIndicator size="small" color="#FFFFFF" />
@@ -241,6 +258,7 @@ export default function AdminDashboard() {
               </>
             )}
           </TouchableOpacity>
+          )}
           <TouchableOpacity onPress={async () => {
             if (!selectedDept || !selectedCounter || waiting.length === 0) return;
             console.log('Skipping:', { dept: selectedDept, counter: selectedCounter });

@@ -42,19 +42,20 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Forbidden", role: profile?.role }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const { department_id, counter_id, skip } = await req.json();
+    const { department_id, counter_id, skip, complete_only } = await req.json();
     if (!department_id || !counter_id) {
       return new Response(JSON.stringify({ error: "department_id and counter_id required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // Look up counter number for notifications
-    let counterNumber = counter_id.slice(0, 8);
+    let counterNumber = String(counter_id).slice(0, 8);
     try {
-      const { data: ctr } = await fetch(supabaseUrl + "/rest/v1/counters?id=eq." + counter_id + "&select=counter_number", {
-        headers: { "apikey": serviceKey, "Authorization": "Bearer " + serviceKey, "Accept": "application/json" },
-      }).then(r => r.ok ? r.json() : []);
-      if (ctr && ctr.length > 0) counterNumber = String(ctr[0].counter_number);
-    } catch {}
+      const ctrDb = createClient(supabaseUrl, serviceKey || anonKey);
+      const { data: ctrArr } = await ctrDb.from("counters").select("counter_number").eq("id", counter_id).limit(1);
+      if (Array.isArray(ctrArr) && ctrArr.length > 0 && ctrArr[0].counter_number != null) {
+        counterNumber = String(ctrArr[0].counter_number);
+      }
+    } catch (e) { console.error("Counter lookup error:", String(e)); }
 
     // Use anon key with user's JWT for all queries (RLS handles permissions)
     const db = createClient(supabaseUrl, anonKey, {
@@ -74,25 +75,21 @@ Deno.serve(async (req) => {
       .eq("date", today)
       .eq("status", "serving")
       .limit(1);
+    console.log("currentServing:", JSON.stringify(currentServing));
 
     if (currentServing && currentServing.length > 0) {
       const ts = new Date().toISOString();
-      // Use raw fetch with service key to bypass RLS
-      if (serviceKey) {
-        const hdrs = { "Content-Type": "application/json", "apikey": serviceKey, "Authorization": "Bearer " + serviceKey, "Prefer": "return=minimal" };
-        const r = await fetch(supabaseUrl + "/rest/v1/queue_tickets?id=eq." + currentServing[0].id, {
-          method: "PATCH", headers: hdrs,
-          body: JSON.stringify({ status: servingStatus, [servingStatus === "completed" ? "completed_at" : "skipped_at"]: ts }),
-        });
-        if (!r.ok) console.error("Complete raw:", r.status, await r.text());
-        else console.log("Complete ok:", currentServing[0].id);
-      } else {
-        const { error: ce } = await db.from("queue_tickets").update({
-          status: servingStatus,
-          [servingStatus === "completed" ? "completed_at" : "skipped_at"]: ts,
-        }).eq("id", currentServing[0].id);
-        if (ce) console.error("Complete err:", ce.message);
-      }
+      const adminDb = createClient(supabaseUrl, serviceKey || anonKey);
+      const { error: ce, data: cd } = await adminDb.from("queue_tickets").update({
+        status: servingStatus,
+        [servingStatus === "completed" ? "completed_at" : "skipped_at"]: ts,
+      }).eq("id", currentServing[0].id).select("ticket_number,status");
+      if (ce) console.error("Complete err:", ce.message);
+      else if (cd) console.log("Complete:", JSON.stringify(cd));
+    }
+
+    if (complete_only) {
+      return new Response(JSON.stringify({ ticket: null, message: "Completed" }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // Pull next waiting ticket (lowest position)

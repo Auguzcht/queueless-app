@@ -67,8 +67,8 @@ export default function HomeScreen() {
             <TouchableOpacity onPress={() => router.push('/notifications')} activeOpacity={0.7} style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center', marginRight: 10 }}>
               <Icon as={Bell} size={18} color="#FFFFFF" />
               {unreadCount > 0 && (
-                <View style={{ position: 'absolute', top: -2, right: -2, minWidth: 18, height: 18, borderRadius: 9, backgroundColor: '#EF4444', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 }}>
-                  <Text style={{ fontSize: 10, fontWeight: '700', color: '#FFFFFF', fontFamily: 'Inter-Bold' }}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
+                <View style={{ position: 'absolute', top: -4, right: -2, minWidth: 18, height: 18, borderRadius: 9, backgroundColor: '#EF4444', alignItems: 'baseline', justifyContent: 'center', paddingHorizontal: 6 }}>
+                  <Text style={{ fontSize: 12, fontWeight: '700', color: '#FFFFFF', fontFamily: 'Inter-Bold', alignItems: 'center' }}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
                 </View>
               )}
             </TouchableOpacity>
