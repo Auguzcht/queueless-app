@@ -12,10 +12,7 @@
       "distribution": "internal"
     },
     "production": {
-      "autoIncrement": true,
-      "node": {
-        "npmInstallCommand": "install --legacy-peer-deps"
-      }
+      "autoIncrement": true
     }
   },
   "submit": {
