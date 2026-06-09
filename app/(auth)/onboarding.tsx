@@ -103,7 +103,7 @@ export default function OnboardingScreen() {
   useEffect(() => {
     if (success) {
       successTimer.current = setTimeout(() => {
-        router.replace('/(tabs)/home');
+        router.replace('/');
       }, 3500);
     }
     return () => { if (successTimer.current) clearTimeout(successTimer.current); };

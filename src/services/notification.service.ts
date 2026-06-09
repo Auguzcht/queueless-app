@@ -56,6 +56,13 @@ export const notificationService = {
     if (error) throw new AppError(error.message, 'MARK_ALL_READ_ERROR');
   },
 
+  subscribeToNotifications(userId: string, callback: (payload: any) => void) {
+    return supabase
+      .channel(`notifications-${userId}-${Date.now()}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` }, callback)
+      .subscribe();
+  },
+
   async getUnreadCount(userId: string): Promise<number> {
     const { count, error } = await (supabase
       .from('notifications')

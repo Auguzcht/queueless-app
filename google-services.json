@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "896748957589",
+    "project_id": "nodado-portfolio",
+    "storage_bucket": "nodado-portfolio.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:896748957589:android:8cdc05465c6e269d1b909c",
+        "android_client_info": {
+          "package_name": "com.queueless.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "896748957589-l0nff8ijj8jtghlsnvvttorr257mb7fd.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyATlajtndZo4i9ty3R7BDprkoNpozDWaHI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "896748957589-l0nff8ijj8jtghlsnvvttorr257mb7fd.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -138,7 +138,7 @@ export default function ServicesScreen() {
         </View>
 
         {filtered.map((d) => {
-          const status = statusMap[d.id];
+          const status = statusMap[d.id] ?? { waitingCount: 0, nowServing: null };
           const DeptIcon = ICON_MAP[d.icon ?? ''] ?? HelpCircle;
           return (
             <TouchableOpacity

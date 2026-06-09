@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { View, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
 import { Stack, router } from 'expo-router';
 import { Icon } from '@/components/ui/icon';
-import { ChevronLeft, Bell } from 'lucide-react-native';
+import { ChevronLeft, MessageSquare } from 'lucide-react-native';
 import { Text } from '@/components/ui/text';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useNotificationStore } from '@/stores/useNotificationStore';
@@ -66,8 +66,11 @@ export default function NotificationsScreen() {
               {item.is_read && <View className="w-2.5" />}
 
               <View className="flex-1">
-                <View className="flex-row items-center justify-between mb-0.5">
-                  <Text className="text-foreground font-semibold text-[15px] flex-1">{item.title}</Text>
+                <View className="flex-row items-start justify-between mb-0.5">
+                  <View className="flex-row items-center gap-1.5 flex-1">
+                    <MessageSquare size={13} color="#6B7280" style={{ marginTop: 0 }} />
+                    <Text className="text-foreground font-semibold text-[15px]">{item.title}</Text>
+                  </View>
                   <Text className="text-gray-400 text-[11px] ml-2">{formatRelativeTime(item.created_at)}</Text>
                 </View>
                 <Text className="text-gray-500 text-sm leading-5">{item.body}</Text>
@@ -78,7 +81,7 @@ export default function NotificationsScreen() {
         ListEmptyComponent={
           <View className="items-center py-24">
             <View className="w-16 h-16 rounded-full bg-gray-100 items-center justify-center mb-4">
-              <Icon as={Bell} size={28} color="#9CA3AF" />
+              <Icon as={MessageSquare} size={28} color="#9CA3AF" />
             </View>
             <Text className="text-foreground text-lg font-semibold text-center">No notifications</Text>
             <Text className="text-gray-400 text-sm text-center mt-1">You're all caught up!</Text>

@@ -136,7 +136,7 @@ export default function EditProfileScreen() {
           ) : (
             <View>
               <Avatar alt={name} style={styles.avatar}>
-                <AvatarImage source={{ uri: profile?.avatar_url ?? '' }} />
+                <AvatarImage source={{ uri: profile?.avatar_url ?? '', cache: 'force-cache' }} />
                 <AvatarFallback style={styles.avatarFallback}>
                   <Text style={styles.avatarText}>{name.slice(0, 2).toUpperCase()}</Text>
                 </AvatarFallback>
@@ -165,15 +165,15 @@ export default function EditProfileScreen() {
           <LockedRow label="Account ID" value={profile?.id ?? ''} mono />
           <LockedRow label="Account Type" value={profile?.role ? profile.role.charAt(0).toUpperCase() + profile.role.slice(1) : ''} />
           <LockedRow label="Email" value={useAuthStore.getState().session?.user?.email ?? ''} />
-          <LockedRow label="Verified" value={profile?.is_verified ? 'Yes' : 'No'} />
 
           {profile?.role === 'student' && studentProfile && (
             <>
               <LockedRow label="Student ID" value={studentProfile.student_id} />
-              <LockedRow label="Education Level" value={studentProfile.education_level.replace(/_/g, ' ')} />
-              <LockedRow label="Year Level" value={studentProfile.year_level.replace(/_/g, ' ')} />
-              {studentProfile.college_name && <LockedRow label="College" value={studentProfile.college_name} />}
-              {studentProfile.program_name && <LockedRow label="Program" value={studentProfile.program_name} />}
+              <LockedRow label="Education Level" value={
+                ({ junior_high: 'Junior High School', senior_high: 'Senior High School', college: 'College' } as any)[studentProfile.education_level] ?? studentProfile.education_level
+              } />
+              {studentProfile.college_code && <LockedRow label="College" value={studentProfile.college_code} />}
+              {studentProfile.program_code && <LockedRow label="Program" value={studentProfile.program_code} />}
             </>
           )}
 
@@ -234,6 +234,45 @@ export default function EditProfileScreen() {
             </View>
           )} />
         </View>
+
+        {/* Year Level (student only, editable) */}
+        {profile?.role === 'student' && (
+          <View style={styles.sectionCard}>
+            <Text style={styles.sectionTitle}>Year Level</Text>
+            <Text style={{ fontSize: 13, color: '#6B7280', marginBottom: 10, fontFamily: 'Inter-Regular' }}>
+              Current: {({
+                grade_7: 'Grade 7', grade_8: 'Grade 8', grade_9: 'Grade 9', grade_10: 'Grade 10',
+                grade_11: 'Grade 11', grade_12: 'Grade 12',
+                first_year: '1st Year', second_year: '2nd Year', third_year: '3rd Year', fourth_year: '4th Year', fifth_year: '5th Year',
+              } as any)[studentProfile?.year_level ?? ''] ?? studentProfile?.year_level}
+            </Text>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+              {({ junior_high: ['grade_7','grade_8','grade_9','grade_10'], senior_high: ['grade_11','grade_12'], college: ['first_year','second_year','third_year','fourth_year','fifth_year'] } as any)[studentProfile?.education_level ?? 'college']?.map((yl: string) => (
+                <TouchableOpacity
+                  key={yl}
+                  onPress={async () => {
+                    if (!profile?.id) return;
+                    await supabase.from('student_profiles').update({ year_level: yl }).eq('profile_id', profile.id);
+                    useAuthStore.getState().refreshExtendedProfile();
+                  }}
+                  style={{
+                    borderWidth: 1.5, borderColor: studentProfile?.year_level === yl ? '#004E98' : '#E5E7EB',
+                    borderRadius: 10, paddingHorizontal: 14, paddingVertical: 8,
+                    backgroundColor: studentProfile?.year_level === yl ? '#EEF2FF' : '#FFFFFF',
+                  }}
+                >
+                  <Text style={{ fontSize: 13, color: studentProfile?.year_level === yl ? '#004E98' : '#6B7280', fontWeight: studentProfile?.year_level === yl ? '600' : '400' }}>
+                    {({
+                      grade_7: 'Gr 7', grade_8: 'Gr 8', grade_9: 'Gr 9', grade_10: 'Gr 10',
+                      grade_11: 'Gr 11', grade_12: 'Gr 12',
+                      first_year: '1st', second_year: '2nd', third_year: '3rd', fourth_year: '4th', fifth_year: '5th',
+                    } as any)[yl] ?? yl}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        )}
 
         <View style={styles.btnWrap}>
           <Button onPress={handleSubmit(onSubmit)} disabled={isBusy || !dirty} className="w-full">

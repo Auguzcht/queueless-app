@@ -52,7 +52,7 @@ export default function LoginScreen() {
               <View className="bg-white/95 rounded-3xl p-6 shadow-sm border border-indigo-100/50 w-full">
                 <Text variant="h2" className="text-foreground font-display mb-1 text-center">Welcome back</Text>
                 <Text className="text-muted-foreground text-sm mb-6 font-body text-center">Sign in to your account</Text>
-                <LoginForm onSuccess={() => router.replace('/(tabs)/home')} onForgotPress={() => setShowForgotSheet(true)} />
+                <LoginForm onSuccess={() => router.replace('/')} onForgotPress={() => setShowForgotSheet(true)} />
               </View>
             </Animated.View>
           </ScrollView>

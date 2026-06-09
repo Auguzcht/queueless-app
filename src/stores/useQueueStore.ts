@@ -92,13 +92,13 @@ export const useQueueStore = create<QueueState>()(
       },
 
       handleRealtimeUpdate: (payload) => {
+        // Only handle UPDATE events — INSERTs are handled by joinQueue locally
+        if (payload.eventType === 'INSERT') return;
+
         const { activeTickets } = get();
         const updated = activeTickets.map((t) =>
           t.id === payload.new.id ? { ...t, ...payload.new } : t,
         );
-        if (!updated.find((t) => t.id === payload.new.id)) {
-          updated.push(payload.new);
-        }
         set({ activeTickets: updated });
       },
 

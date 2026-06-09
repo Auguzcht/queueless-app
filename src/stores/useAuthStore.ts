@@ -1,3 +1,4 @@
+import { Image } from 'react-native';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -50,6 +51,9 @@ export const useAuthStore = create<AuthState>()(
       },
 
       signOut: async () => {
+        // Optimistically clear local session first
+        set({ session: null, isAuthenticated: false, profile: null, studentProfile: null, guardianInfo: null });
+        // Then sign out from Supabase (may take 200-500ms but UI is already updated)
         await authService.signOut();
       },
 
@@ -66,6 +70,10 @@ export const useAuthStore = create<AuthState>()(
         try {
           const profile = await profileService.getProfile(session.user.id);
           set({ profile });
+          // Prefetch avatar image for instant display
+          if (profile?.avatar_url) {
+            Image.prefetch(profile.avatar_url).catch(() => {});
+          }
           get().refreshExtendedProfile();
         } catch (err) {
           console.error('Failed to fetch profile:', err);

@@ -1,4 +1,4 @@
-import { ScrollView, View, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import { ScrollView, View, TouchableOpacity, StyleSheet, Image, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '@/components/ui/text';
 import { Icon } from '@/components/ui/icon';
@@ -14,11 +14,13 @@ const MENU = [
   { icon: Shield, label: 'Privacy & Security', route: '/settings/privacy' },
   { icon: HelpCircle, label: 'Help & Support', route: '/settings/help' },
   { icon: Info, label: 'About', route: '/settings/about' },
+  { icon: LogOut, label: 'Sign Out', route: 'signout' },
 ];
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const { profile, signOut } = useAuthStore();
+  const isStaff = profile?.role === 'staff' || profile?.role === 'admin';
   const name = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ') || 'User';
 
   return (
@@ -36,7 +38,7 @@ export default function ProfileScreen() {
         {/* Profile Card */}
         <View style={styles.profileCard}>
           <Avatar alt={name} style={styles.avatar}>
-            <AvatarImage source={{ uri: profile?.avatar_url ?? '' }} />
+            <AvatarImage source={{ uri: profile?.avatar_url ?? '', cache: 'force-cache' }} />
             <AvatarFallback style={styles.avatarFallback}>
               <Text style={styles.avatarText}>{name.slice(0, 2).toUpperCase()}</Text>
             </AvatarFallback>
@@ -49,29 +51,42 @@ export default function ProfileScreen() {
           )}
         </View>
 
+        {/* Admin link (staff only) */}
+        {isStaff && (
+          <TouchableOpacity
+            onPress={() => router.push('/dash')}
+            activeOpacity={0.7}
+            style={[styles.menuCard, { marginBottom: 20, paddingHorizontal: 16, paddingVertical: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+              <Icon as={Shield} size={20} color="#004E98" />
+              <Text style={{ fontSize: 15, color: '#004E98', fontWeight: '600', fontFamily: 'Inter-SemiBold' }}>Admin Dashboard</Text>
+            </View>
+            <ChevronRight size={18} color="#D1D5DB" />
+          </TouchableOpacity>
+        )}
+
         {/* Menu */}
         <View style={styles.menuCard}>
           {MENU.map((item, i) => (
             <TouchableOpacity
               key={item.label}
-              onPress={() => router.push(item.route as any)}
+              onPress={() => {
+                if (item.route === 'signout') { Alert.alert('Sign Out', 'Are you sure you want to sign out?', [{ text: 'Cancel', style: 'cancel' }, { text: 'Sign Out', style: 'destructive', onPress: () => signOut() }]); return; }
+                router.push(item.route as any);
+              }}
               activeOpacity={0.7}
-              style={styles.menuRow}
+              style={[styles.menuRow, item.route === 'signout' && { borderTopWidth: 1, borderTopColor: '#F3F4F6', marginTop: 4 }]}
             >
               <View style={styles.menuLeft}>
-                <Icon as={item.icon} size={20} color="#6B7280" />
-                <Text style={styles.menuLabel}>{item.label}</Text>
+                <Icon as={item.icon} size={20} color={item.route === 'signout' ? '#EF4444' : '#6B7280'} />
+                <Text style={[styles.menuLabel, item.route === 'signout' && { color: '#EF4444' }]}>{item.label}</Text>
               </View>
-              <ChevronRight size={18} color="#D1D5DB" />
             </TouchableOpacity>
           ))}
         </View>
 
-        {/* Sign Out */}
-        <TouchableOpacity onPress={async () => { await signOut(); }} style={styles.signOutRow}>
-          <Icon as={LogOut} size={18} color="#EF4444" />
-          <Text style={styles.signOutText}>Sign Out</Text>
-        </TouchableOpacity>
+
       </ScrollView>
     </View>
   );
@@ -180,20 +195,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#111827',
     fontFamily: 'Inter-Regular',
-  },
-  signOutRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    marginHorizontal: 24,
-    marginTop: 28,
-    paddingVertical: 16,
-  },
-  signOutText: {
-    color: '#EF4444',
-    fontWeight: '600',
-    fontSize: 15,
   },
   footer: {
     textAlign: 'center',

@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { View, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Redirect, router } from 'expo-router';
@@ -12,9 +12,19 @@ import { Icon } from '@/components/ui/icon';
 
 export default function WelcomeScreen() {
   const session = useAuthStore((s) => s.session);
+  const profile = useAuthStore((s) => s.profile);
   const [showSheet, setShowSheet] = useState(false);
 
-  if (session) return <Redirect href="/(tabs)/home" />;
+  // Wait for profile to load before deciding redirect
+  if (session) {
+    if (profile === null) {
+      // Profile still loading — render nothing (splash will show)
+      return null;
+    }
+    const role = profile?.role;
+    if (role === 'staff' || role === 'admin') return <Redirect href="/dash" />;
+    return <Redirect href="/(tabs)/home" />;
+  }
 
   return (
     <View className="flex-1 bg-background">

@@ -38,6 +38,7 @@ export const queueService = {
 
   async getActiveTickets(userId: string): Promise<QueueTicket[]> {
     const today = new Date().toISOString().split('T')[0];
+
     const { data, error } = await (supabase
       .from('queue_tickets')
       .select() as any)
@@ -72,7 +73,6 @@ export const queueService = {
       .from('queue_tickets')
       .select() as any)
       .eq('user_id', userId)
-      .not('status', 'in', '("waiting","serving")')
       .order('created_at', { ascending: false })
       .range(from, to);
 

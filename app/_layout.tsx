@@ -1,5 +1,6 @@
 import '../global.css';
 import { useEffect } from 'react';
+import { Image } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts, Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter';
@@ -16,6 +17,7 @@ import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { PortalHost } from '@rn-primitives/portal';
 import { authService } from '@/services/auth.service';
 import { MeshProvider } from '@/lib/mesh-context';
+import { useNotificationStore } from '@/stores/useNotificationStore';
 
 
 try { SplashScreen.preventAutoHideAsync(); } catch {}
@@ -33,6 +35,14 @@ export default function RootLayout() {
   usePushNotifications();
 
   const session = useAuthStore((s) => s.session);
+  const avatarUrl = useAuthStore((s) => s.profile?.avatar_url);
+
+  // Preload avatar image as soon as profile is available (from persist or fetch)
+  useEffect(() => {
+    if (avatarUrl) {
+      Image.prefetch(avatarUrl);
+    }
+  }, [avatarUrl]);
 
   useEffect(() => {
     authService.getSession()
@@ -43,6 +53,14 @@ export default function RootLayout() {
     });
     return () => listener?.subscription.unsubscribe();
   }, []);
+
+  // Global notification subscription - active on all pages
+  useEffect(() => {
+    const user = useAuthStore.getState().profile;
+    if (!user?.id) return;
+    const unsub = useNotificationStore.getState().subscribeToNotifications(user.id);
+    return unsub;
+  }, [useAuthStore((s) => s.profile?.id)]);
 
   useEffect(() => { try { SplashScreen.hideAsync(); } catch {} }, []);
 
@@ -59,11 +77,12 @@ export default function RootLayout() {
         >
           <Stack.Screen name="index" />
           <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="dash" />
           <Stack.Screen name="(auth)" />
           <Stack.Screen name="queue" options={{ presentation: 'modal' }} />
           <Stack.Screen name="settings" options={{ headerShown: false }} />
           <Stack.Screen name="settings/*" options={{ headerShown: false }} />
-          <Stack.Screen name="admin" options={{ presentation: 'modal' }} />
+
           <Stack.Screen name="notifications" options={{ headerShown: false }} />
         </Stack>
       </View>

@@ -20,12 +20,17 @@ export default function MyQueueScreen() {
   const userId = useAuthStore((s) => s.session?.user?.id);
   const { activeTickets, isLoading, fetchActiveTickets, cancelTicket } = useQueueStore();
 
+  useFocusEffect(
+    useCallback(() => {
+      scrollRef.current?.scrollTo({ y: 0, animated: false });
+    }, [])
+  );
+
   useEffect(() => { if (userId) fetchActiveTickets(userId); }, [userId]);
 
   // Silent refresh on tab focus — no loading state to prevent scroll jump
   useFocusEffect(
     useCallback(() => {
-      scrollRef.current?.scrollTo({ y: 0, animated: false });
       if (userId) {
         queueService.getActiveTickets(userId).then((tickets) => {
           useQueueStore.setState({ activeTickets: tickets });
@@ -47,7 +52,7 @@ export default function MyQueueScreen() {
     <View style={styles.root}>
       <ScrollView
         ref={scrollRef}
-        contentContainerStyle={{ paddingBottom: 40 }}
+        contentContainerStyle={{ paddingBottom: insets.bottom + 100 }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="always"
         refreshControl={
@@ -95,7 +100,7 @@ export default function MyQueueScreen() {
                   </View>
 
                   {/* Progress */}
-                  <QueueProgressTracker currentStep={ticket.status === 'serving' ? 'served' : 'in_line'} />
+                  <QueueProgressTracker currentStep={ticket.status === 'serving' ? 'called' : 'in_line'} />
 
                   {/* Cancel */}
                   {ticket.status === 'waiting' && (

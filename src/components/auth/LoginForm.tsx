@@ -32,7 +32,7 @@ export function LoginForm({ onSuccess, onForgotPress }: Props) {
       setError(null);
       await signIn(data);
       if (onSuccess) onSuccess();
-      else router.replace('/(tabs)/home');
+      else router.replace('/');
     } catch (err: any) {
       setError(err.message);
     }

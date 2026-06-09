@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const joinQueueSchema = z.object({
-  departmentId: z.string().uuid('Invalid department'),
+  departmentId: z.string(),
 });
 
 export const ticketStatusSchema = z.enum([

@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "scheme": "queueless",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/QueueLess-1024x1024.png",
     "userInterfaceStyle": "light",
     "splash": {
       "backgroundColor": "#004E98",
@@ -18,21 +18,32 @@
       "expo-router",
       "expo-font",
       "expo-secure-store",
-      "expo-splash-screen"
+      "expo-splash-screen",
+      "expo-notifications"
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.queueless.app"
+      "bundleIdentifier": "com.queueless.app",
+      "infoPlist": {
+        "UIBackgroundModes": ["remote-notification"]
+      }
     },
     "android": {
       "package": "com.queueless.app",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/adaptive-icon.png"
+        "foregroundImage": "./assets/QueueLess-1024x1024.png",
+        "backgroundColor": "#004E98"
       }
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "568bb87d-ac78-429b-b211-7c92514f8da9"
+      }
     }
   }
 }

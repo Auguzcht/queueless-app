@@ -10,6 +10,7 @@ interface NotificationState {
   fetchNotifications: (userId: string, page?: number) => Promise<void>;
   markAsRead: (notificationId: string) => Promise<void>;
   markAllAsRead: (userId: string) => Promise<void>;
+  subscribeToNotifications: (userId: string) => () => void;
   setUnreadCount: (count: number) => void;
   reset: () => void;
 }
@@ -50,6 +51,17 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
       notifications: state.notifications.map((n) => ({ ...n, is_read: true })),
       unreadCount: 0,
     }));
+  },
+
+  subscribeToNotifications: (userId) => {
+    const channel = notificationService.subscribeToNotifications(userId, (payload) => {
+      const newNotif = payload.new as NotificationItem;
+      set((state) => ({
+        notifications: [newNotif, ...state.notifications],
+        unreadCount: state.unreadCount + 1,
+      }));
+    });
+    return () => { channel.unsubscribe(); };
   },
 
   setUnreadCount: (count) => set({ unreadCount: count }),

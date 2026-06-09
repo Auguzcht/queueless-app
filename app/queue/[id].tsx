@@ -43,7 +43,7 @@ export default function QueueDetailScreen() {
             <QueueStatusBadge status={ticket.status} />
           </View>
           <QueuePositionCard position={ticket.position} totalAhead={Math.max(ticket.position - 1, 0)} />
-          <QueueProgressTracker currentStep={ticket.status === 'serving' ? 'served' : ticket.status === 'waiting' ? 'in_line' : 'joined'} />
+          <QueueProgressTracker currentStep={ticket.status === 'serving' ? 'called' : ticket.status === 'waiting' ? 'in_line' : 'in_line'} />
           <View className="gap-3">
             <Row label="Joined" value={formatTimestamp(ticket.joined_at)} />
             {ticket.called_at && <Row label="Called" value={formatTimestamp(ticket.called_at)} />}

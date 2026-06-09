@@ -2,14 +2,16 @@ import { supabase } from '@/lib/supabase';
 import { updateProfileSchema, profileResponseSchema, type UpdateProfileInput, type ProfileResponse } from '@/schemas/profile.schema';
 import { AppError, ValidationError } from '@/types/errors';
 import { storage } from '@/lib/firebase';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 
 export interface StudentProfileInfo {
   student_id: string;
   education_level: string;
   year_level: string;
   college_name?: string;
+  college_code?: string;
   program_name?: string;
+  program_code?: string;
 }
 
 export interface GuardianInfo {
@@ -51,7 +53,7 @@ export const profileService = {
   async getStudentProfile(profileId: string): Promise<StudentProfileInfo | null> {
     const { data, error } = await supabase
       .from('student_profiles')
-      .select('student_id, education_level, year_level, colleges(name), programs(name)')
+      .select('student_id, education_level, year_level, colleges(name, code), programs(name, code)')
       .eq('profile_id', profileId)
       .maybeSingle();
 
@@ -63,7 +65,9 @@ export const profileService = {
       education_level: data.education_level,
       year_level: data.year_level,
       college_name: (data as any).colleges?.name ?? undefined,
+      college_code: (data as any).colleges?.code ?? undefined,
       program_name: (data as any).programs?.name ?? undefined,
+      program_code: (data as any).programs?.code ?? undefined,
     };
   },
 
@@ -149,6 +153,10 @@ export const profileService = {
       throw new AppError('Uploaded file is not a valid image.', 'INVALID_IMAGE');
     }
 
+    // Fetch old avatar URL before overwriting
+    const { data: oldProfile } = await supabase.from('profiles').select('avatar_url').eq('id', userId).single();
+    const oldUrl = oldProfile?.avatar_url;
+
     const storageRef = ref(storage, `QueueLess/avatars/${userId}/${Date.now()}.jpg`);
 
     await uploadBytes(storageRef, blob, { contentType: 'image/jpeg' });
@@ -161,6 +169,14 @@ export const profileService = {
       .eq('id', userId);
 
     if (error) throw new AppError('Failed to save avatar URL', 'PROFILE_UPDATE_ERROR');
+
+    // Delete old avatar from Firebase (best-effort — new image is already saved)
+    if (oldUrl && oldUrl.includes('firebasestorage.googleapis.com') && oldUrl !== downloadUrl) {
+      try {
+        const oldRef = ref(storage, oldUrl);
+        await deleteObject(oldRef);
+      } catch {} // Fail silently — orphaned file is acceptable
+    }
 
     return downloadUrl;
   },
